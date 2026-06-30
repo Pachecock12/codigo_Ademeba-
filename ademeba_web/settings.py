@@ -148,29 +148,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Archivos multimedia (Subidos por los usuarios: fotos, PDFs)
-if os.getenv('USE_S3', 'False') == 'True':
-    STORAGES = {
-        'default': {
-            'BACKEND': 'gestion.storage.SupabaseS3Storage',
-        },
-        'staticfiles': {
-            'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
-        },
-    }
-    AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-    AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME', 'ademeba-media')
-    AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL')
-    AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME', 'us-east-1')
-    AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
-    AWS_DEFAULT_ACL = 'public-read'
-    AWS_QUERYSTRING_AUTH = False
-    AWS_S3_ADDRESSING_STYLE = 'path'
-    project_id = AWS_S3_ENDPOINT_URL.replace('https://', '').split('.')[0]
-    MEDIA_URL = f'https://{project_id}.supabase.co/storage/v1/object/public/{AWS_STORAGE_BUCKET_NAME}/'
-else:
-    MEDIA_URL = '/media/'
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+MEDIA_ROOT = '/app/media'
 
 # Producción: dominios permitidos para CSRF
 CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://127.0.0.1:8000').split(',')
