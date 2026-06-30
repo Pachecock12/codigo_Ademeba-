@@ -165,6 +165,7 @@ if os.getenv('USE_S3', 'False') == 'True':
     AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
     AWS_DEFAULT_ACL = 'public-read'
     AWS_QUERYSTRING_AUTH = False
+    AWS_S3_ADDRESSING_STYLE = 'path'
     project_id = AWS_S3_ENDPOINT_URL.replace('https://', '').split('.')[0]
     MEDIA_URL = f'https://{project_id}.supabase.co/storage/v1/object/public/{AWS_STORAGE_BUCKET_NAME}/'
 else:
