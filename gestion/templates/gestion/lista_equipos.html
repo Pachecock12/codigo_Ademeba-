@@ -27,7 +27,7 @@
             <div class="card border-0 shadow-sm rounded-4 h-100 text-center p-3 hover-effect">
                 <div class="mx-auto mt-2 mb-3 bg-light rounded-circle d-flex align-items-center justify-content-center border" style="width: 90px; height: 90px; overflow: hidden;">
                     {% if equipo.logo %}
-                        <img src="{{ equipo.logo.url }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.parentElement.innerHTML='<i class=\'bi bi-shield-fill text-secondary fs-1\'></i>';">                        
+                        <img src="{{ equipo.logo.url }}" style="width: 100%; height: 100%; object-fit: cover;">                        
                     {% else %}
                         <i class="bi bi-shield-fill text-secondary fs-1"></i>
                     {% endif %}

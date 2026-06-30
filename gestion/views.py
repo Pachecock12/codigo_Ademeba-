@@ -462,7 +462,8 @@ def cambiar_logo_equipo(peticion, equipo_id):
             form.save(commit=False)
             equipo.logo = form.cleaned_data['logo']
             equipo.save()
-    return redirect('dashboard')
+        return redirect('gestionar_equipo', equipo_id=equipo_id)
+    return redirect('gestionar_equipo', equipo_id=equipo_id)
 
 @login_required
 def eliminar_staff(peticion, pk):
