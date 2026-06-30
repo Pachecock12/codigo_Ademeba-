@@ -1,2 +1,2 @@
-web: gunicorn ademeba_web.wsgi --workers 4 --timeout 120
+web: bash start.sh
 release: python manage.py migrate --noinput
