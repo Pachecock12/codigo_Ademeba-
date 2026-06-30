@@ -114,7 +114,8 @@ class Jugador(models.Model):
 
         ruta_valida = reverse('validar_jugador_qr', args=[self.id])
         qr_url_esperada = f"{settings.SITE_URL}{ruta_valida}"
-        if not self.codigo_qr or es_nuevo:
+        qr_falta = self.codigo_qr and not self.codigo_qr.storage.exists(self.codigo_qr.name)
+        if not self.codigo_qr or es_nuevo or qr_falta:
             qr_content = qr_url_esperada
             qr = qrcode.QRCode(version=1, box_size=10, border=5)
             qr.add_data(qr_content)
