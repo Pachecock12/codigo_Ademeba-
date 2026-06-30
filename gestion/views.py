@@ -200,6 +200,7 @@ def equipos_tutor(peticion):
         config = ConfiguracionSistema.objects.get(pk=1)
         hay_inscripciones = config.inscripciones_activas
     except ConfiguracionSistema.DoesNotExist:
+        config = None
         hay_inscripciones = Temporada.objects.filter(
             inscripciones_abiertas=True, campeon__isnull=True
         ).exists()
@@ -222,6 +223,7 @@ def registrar_jugador_equipo(peticion, equipo_id):
         config = ConfiguracionSistema.objects.get(pk=1)
         hay_inscripciones = config.inscripciones_activas
     except ConfiguracionSistema.DoesNotExist:
+        config = None
         hay_inscripciones = Temporada.objects.filter(
             inscripciones_abiertas=True, campeon__isnull=True
         ).exists()
