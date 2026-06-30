@@ -1,2 +1,2 @@
-web: gunicorn ademeba_web.wsgi --bind 0.0.0.0:\$PORT --workers 4 --timeout 120
+web: gunicorn ademeba_web.wsgi --bind 0.0.0.0:$PORT --workers 4 --timeout 120
 release: python manage.py migrate --noinput

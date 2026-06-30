@@ -6,6 +6,3 @@ cmds = ['pip install --no-cache-dir -r requirements.txt']
 
 [phases.build]
 cmds = ['python manage.py collectstatic --noinput']
-
-[start]
-cmd = 'gunicorn ademeba_web.wsgi --bind 0.0.0.0:$PORT --workers 4 --timeout 120'
