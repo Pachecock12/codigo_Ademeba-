@@ -1,5 +1,8 @@
 import json
+import logging
 from django.shortcuts import render, redirect, get_object_or_404
+
+logger = logging.getLogger(__name__)
 from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -703,12 +706,15 @@ def mis_adeudos_entrenador(peticion):
 def lista_entrenadores(peticion):
     if peticion.method == 'POST':
         if 'btn_crear_entrenador' in peticion.POST:
+            logger.info(f"POST data keys: {list(peticion.POST.keys())}")
             form_entrenador = RegistroEntrenadorForm(peticion.POST)
             if form_entrenador.is_valid():
                 form_entrenador.save()
+                logger.info("Entrenador creado exitosamente")
                 messages.success(peticion, '¡Cuenta de entrenador creada exitosamente!')
                 return redirect('lista_entrenadores')
             else:
+                logger.warning(f"Form errors: {form_entrenador.errors}")
                 for field, errores in form_entrenador.errors.items():
                     for error in errores:
                         if field == '__all__':
@@ -716,6 +722,8 @@ def lista_entrenadores(peticion):
                         else:
                             label = form_entrenador.fields[field].label or field
                             messages.error(peticion, f'{label}: {error}')
+        else:
+            logger.warning("btn_crear_entrenador NOT in POST data")
     else: 
         form_entrenador = RegistroEntrenadorForm()
         
