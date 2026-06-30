@@ -1,0 +1,55 @@
+{% extends 'gestion/base_dashboard.html' %}
+{% block header_title %}Archivo Financiero{% endblock %}
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0">Historial de Finanzas</h4>
+            <p class="text-muted small mb-0">Selecciona un año para explorar los movimientos y balances de la liga.</p>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        {% for anio in anios %}
+        <div class="col-md-4 col-lg-3">
+            <a href="{% url 'historial_finanzas_anio' anio.year %}" class="text-decoration-none">
+                <div class="card border-0 shadow-sm rounded-4 h-100 bg-white folder-card text-center p-4 transition-hover">
+                    <div class="d-flex justify-content-center mb-3">
+                        <div class="p-3 bg-light rounded-circle shadow-sm">
+                            <i class="bi bi-folder2-open text-warning display-5"></i>
+                        </div>
+                    </div>
+                    <h4 class="fw-bold text-dark mb-1">{{ anio.year }}</h4>
+                    <p class="text-success fw-bold mb-0">+${{ anio.total_ingresado }}</p>
+                    <span class="badge bg-light text-secondary border border-secondary-subtle rounded-pill px-3 py-2 mt-2">
+                        Ver registros <i class="bi bi-arrow-right ms-1"></i>
+                    </span>
+                </div>
+            </a>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center text-muted py-5">
+            <div class="p-5 bg-white rounded-4 border-dashed shadow-sm d-inline-block">
+                <i class="bi bi-folder-x display-1 text-secondary mb-3 opacity-50"></i>
+                <h5 class="fw-bold text-dark">No hay registros anteriores</h5>
+                <p class="mb-0 text-muted">Aún no se ha generado un historial financiero por años.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    /* Efecto visual suave para las tarjetas de carpetas */
+    .transition-hover {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    .transition-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1.5rem rgba(0,0,0,.15)!important;
+    }
+    .border-dashed {
+        border: 2px dashed #dee2e6;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends 'gestion/base_dashboard.html' %}
+
+{% block header_title %}Editar Torneo{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0 text-dark">Ajustes del Torneo</h4>
+            <p class="text-muted small mb-0">Modifica las fechas de inicio, corte de edad o categoría.</p>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4 mx-auto" style="max-width: 600px;">
+        <h5 class="fw-bold mb-4 text-center border-bottom pb-3"><i class="bi bi-pencil-square text-primary me-2"></i> Torneo: {{ temporada.nombre }}</h5>
+        
+        <form method="POST">
+            {% csrf_token %}
+            <div class="bg-light p-4 rounded-4 border mb-4">
+                <div class="alert alert-info border-0 rounded-3 mb-4">
+                    <div class="row">
+                        <div class="col-6">
+                            <span class="text-muted small fw-bold d-block">Fecha de inicio</span>
+                            <span class="fw-bold text-dark">{{ temporada.fecha_inicio|date:"d/m/Y" }}</span>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted small fw-bold d-block">Fecha de fin</span>
+                            <span class="fw-bold text-dark">{{ temporada.fecha_fin|date:"d/m/Y" }}</span>
+                        </div>
+                    </div>
+                    <small class="text-muted d-block mt-2"><i class="bi bi-info-circle me-1"></i> Las fechas del torneo solo se definen al crearlo y no se pueden modificar después.</small>
+                </div>
+                <style>
+                    form input, form select { width: 100%; padding: 0.6rem; border: 1px solid #ced4da; border-radius: 0.5rem; margin-bottom: 15px;}
+                    form label { font-weight: bold; font-size: 0.9rem; margin-bottom: 5px; color: #444; }
+                    form input[type="checkbox"] { width: auto; margin-right: 0.5rem; }
+                </style>
+                {{ form.as_p }}
+            </div>
+            
+            <div class="d-flex justify-content-between gap-3 mt-3">
+                <a href="{% url 'lista_temporadas' %}" class="btn btn-outline-dark fw-bold rounded-pill px-4 w-50">
+                    <i class="bi bi-x-circle me-1"></i> Cancelar
+                </a>
+                <button type="submit" class="btn btn-warning text-dark fw-bold rounded-pill px-4 w-50 shadow-sm">
+                    <i class="bi bi-save2-fill me-1"></i> Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

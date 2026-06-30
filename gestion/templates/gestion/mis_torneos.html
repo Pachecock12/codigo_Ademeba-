@@ -1,0 +1,135 @@
+{% extends 'gestion/base_dashboard.html' %}
+
+{% block header_title %}Mis Torneos y Competiciones{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-0 text-dark">Mis Torneos Oficiales</h3>
+            <p class="text-muted small mb-0 fw-bold">Club: {{ equipo.club }}</p>
+        </div>
+        <a href="{% url 'dashboard' %}" class="btn btn-light border rounded-pill px-4 shadow-sm fw-bold text-dark">
+            <i class="bi bi-house-door-fill me-2"></i> Volver al Inicio
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show fw-bold shadow-sm rounded-4" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-trophy-fill text-warning me-2"></i> Torneos Activos (Inscrito)</h5>
+    <div class="row g-4 mb-5">
+        {% for inscripcion in inscripciones_activas %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                    <div class="card-header bg-dark text-white rounded-top-4 p-3 border-0">
+                        <h6 class="fw-bold mb-0 text-truncate">{{ inscripcion.temporada.nombre }}</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted small fw-bold">Estado:</span>
+                            {% if inscripcion.temporada.estado_actual == 'Inscripciones' %}
+                                <span class="badge bg-success rounded-pill">Inscripciones Abiertas</span>
+                            {% else %}
+                                <span class="badge bg-primary rounded-pill">Temporada En Curso</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted small fw-bold">Categoría:</span>
+                            <span class="fw-bold text-dark">{{ inscripcion.temporada.anio_nac_min }} a {{ inscripcion.temporada.anio_nac_max }}</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-4">
+                            <span class="text-muted small fw-bold">Rama:</span>
+                            <span class="badge bg-light text-dark border px-3 rounded-pill">{{ inscripcion.temporada.rama }}</span>
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-auto">
+                            <a href="{% url 'gestionar_roster' inscripcion.temporada.id equipo.id %}" class="btn btn-outline-dark rounded-pill fw-bold shadow-sm">
+                                <i class="bi bi-card-checklist me-2"></i> Ver / Editar Roster
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12">
+                <div class="alert alert-light border shadow-sm rounded-4 text-center py-5">
+                    <i class="bi bi-clipboard-x text-muted mb-3" style="font-size: 3rem;"></i>
+                    <h5 class="fw-bold text-dark">No estás inscrito en ningún torneo activo</h5>
+                    <p class="text-muted">Revisa las convocatorias abiertas abajo para inscribir a tu equipo.</p>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <h5 class="fw-bold mb-3 text-dark"><i class="bi bi-door-open-fill text-success me-2"></i> Convocatorias Abiertas</h5>
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-5">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light small text-muted">
+                    <tr>
+                        <th class="ps-3">NOMBRE DEL TORNEO</th>
+                        <th>CATEGORÍA (EDADES)</th>
+                        <th>RAMA</th>
+                        <th>REGIÓN</th>
+                        <th>ESTATUS</th>
+                        <th class="text-end pe-3">ACCIÓN</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for torneo in torneos_disponibles %}
+                        <tr>
+                            <td class="ps-3 fw-bold text-dark">{{ torneo.nombre }}</td>
+                            <td><span class="badge bg-dark rounded-pill px-3">{{ torneo.anio_nac_min }} - {{ torneo.anio_nac_max }}</span></td>
+                            <td><span class="fw-bold text-secondary">{{ torneo.rama }}</span></td>
+                            <td><span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill px-3">{{ torneo.region }}</span></td>
+                            <td>
+                                {% if torneo.estado_actual == 'Inscripciones' %}
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-3">Abierto</span>
+                                {% else %}
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary rounded-pill px-3">Iniciado</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-3">
+                                <a href="{% url 'gestionar_roster' torneo.id equipo.id %}" class="btn btn-sm btn-warning fw-bold rounded-pill shadow-sm px-4">
+                                    Inscribir Equipo <i class="bi bi-arrow-right ms-1"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="6" class="text-center text-muted py-5 fw-bold">No hay nuevas convocatorias abiertas en este momento.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if inscripciones_pasadas %}
+    <h5 class="fw-bold text-dark mb-3 mt-5"><i class="bi bi-clock-history text-secondary me-2"></i> Historial de Torneos Pasados</h5>
+    <div class="row g-4 opacity-75">
+        {% for inscripcion in inscripciones_pasadas %}
+        <div class="col-md-4">
+            <div class="card border border-2 border-light shadow-none rounded-4 bg-light h-100 p-3">
+                <div class="card-body p-0">
+                    <h6 class="fw-bold text-secondary mb-2">{{ inscripcion.temporada.nombre }}</h6>
+                    <span class="badge bg-secondary mb-3">Torneo Finalizado</span>
+                    <p class="small text-muted mb-2">Roster cerrado y guardado en archivo histórico.</p>
+                    <a href="{% url 'gestionar_roster' inscripcion.temporada.id equipo.id %}" class="btn btn-sm btn-outline-secondary rounded-pill fw-bold w-100">Ver Roster Histórico</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

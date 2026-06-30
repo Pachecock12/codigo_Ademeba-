@@ -1,0 +1,63 @@
+{% extends 'gestion/base_dashboard.html' %}
+
+{% block header_title %}Archivo Histórico: {{ anio_buscado }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0 text-secondary"><i class="bi bi-archive-fill me-2"></i> Temporada Deportiva {{ anio_buscado }}</h4>
+            <p class="text-muted small mb-0">Consulta los torneos y ligas que se llevaron a cabo durante este ciclo.</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for temporada in temporadas %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100 hover-effect {% if temporada.estado_actual == 'Finalizada' %}bg-light{% endif %}">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="bg-dark text-white rounded-3 p-2 d-inline-block">
+                            <i class="bi bi-trophy-fill fs-4"></i>
+                        </div>
+                        {% if temporada.estado_actual == 'Finalizada' %}
+                            <span class="badge bg-secondary">Archivado</span>
+                        {% else %}
+                            <span class="badge bg-success">En Curso</span>
+                        {% endif %}
+                    </div>
+                    
+                    <h5 class="fw-bold text-dark mb-1">{{ temporada.nombre }}</h5>
+                    <p class="text-muted small mb-3">{{ temporada.get_categoria_display }} | {{ temporada.rama }}</p>
+                    
+                    <div class="border-top border-bottom py-2 mb-3">
+                        <small class="d-block text-muted"><strong>Inicio:</strong> {{ temporada.fecha_inicio|date:"d/m/Y" }}</small>
+                        <small class="d-block text-muted"><strong>Fin:</strong> {{ temporada.fecha_fin|date:"d/m/Y" }}</small>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-bold text-dark fs-5">{{ temporada.inscripciones.count }} <span class="small text-muted fw-normal fs-6">Equipos</span></span>
+                        <a href="{% url 'archivo_historico_detalle' temporada.id %}" class="btn btn-outline-dark btn-sm rounded-pill fw-bold">
+                            Revisar Récords
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-secondary text-center py-5 border-0 rounded-4">
+                <i class="bi bi-folder-x fs-1 d-block mb-3 text-muted"></i>
+                <h5 class="fw-bold">No hay registros en {{ anio_buscado }}</h5>
+                <p class="text-muted">El sistema no detectó torneos que hayan iniciado en este año calendario.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .hover-effect { transition: transform 0.2s ease-in-out; border: 1px solid transparent; }
+    .hover-effect:hover { transform: translateY(-5px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; border-color: #dee2e6; }
+</style>
+{% endblock %}

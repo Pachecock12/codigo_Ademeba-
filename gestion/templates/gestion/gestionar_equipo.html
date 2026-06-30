@@ -1,0 +1,608 @@
+{% extends 'gestion/base_dashboard.html' %}
+
+{% block header_title %}Panel de Equipo: {{ equipo.club }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-0 text-dark">{{ equipo.club }} - {{ equipo.nombre }}</h3>
+            <p class="text-muted small mb-0 fw-bold">Gestión Integral del Club
+                <span class="badge bg-info bg-opacity-10 text-info ms-2">
+                    <i class="bi bi-people-fill me-1"></i>{{ jugadores_varonil|length|add:jugadores_femenil|length }}/{{ equipo.max_jugadores }} jugadores
+                </span>
+            </p>
+        </div>
+        <a href="javascript:history.back()" class="btn btn-light border rounded-pill px-4 shadow-sm fw-bold text-dark hover-lift">
+            <i class="bi bi-arrow-left me-2"></i> Volver
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show fw-bold shadow-sm rounded-4 border-0 d-flex align-items-center p-3" role="alert">
+                {% if message.tags == 'success' %}<i class="bi bi-check-circle-fill fs-5 text-success me-3"></i>{% endif %}
+                {% if message.tags == 'error' or message.tags == 'danger' %}<i class="bi bi-exclamation-triangle-fill fs-5 text-danger me-3"></i>{% endif %}
+                {{ message }}
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card border-0 shadow-sm rounded-pill p-3 mb-4 bg-white hover-lift">
+        <div class="d-flex align-items-center gap-2 flex-wrap px-2">
+            <span class="text-muted small fw-bold me-2"><i class="bi bi-tools text-primary"></i> ADMIN TOOLS:</span>
+            
+            {% if user.is_staff %}
+            <button class="btn btn-dark btn-sm rounded-pill fw-bold shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#modalEditarEquipo">
+                <i class="bi bi-pencil-square me-1"></i> Editar Perfil
+            </button>
+            {% endif %}
+            
+            <button class="btn btn-primary btn-sm rounded-pill fw-bold shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#modalFicharCurp">
+                <i class="bi bi-search me-1"></i> Fichar por CURP
+            </button>
+            
+            {% if user.is_staff %}
+            <button class="btn btn-success btn-sm rounded-pill fw-bold shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#modalAltaManual">
+                <i class="bi bi-person-plus-fill me-1"></i> Alta Manual
+            </button>
+            {% endif %}
+            
+            <button class="btn btn-secondary btn-sm rounded-pill fw-bold shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#modalStaff">
+                <i class="bi bi-person-badge-fill me-1"></i> Añadir Staff
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 text-center h-100 bg-white">
+                <div class="mx-auto mb-3 position-relative" style="width: 160px; height: 160px;">
+                    {% if equipo.logo %}
+                        <img src="{{ equipo.logo.url }}" class="rounded-circle border border-4 border-white object-fit-cover shadow" width="100%" height="100%" alt="Logo Club">
+                    {% else %}
+                        <div class="bg-light rounded-circle border border-4 border-white d-flex align-items-center justify-content-center shadow h-100 w-100">
+                            <i class="bi bi-shield-fill text-secondary" style="font-size: 4rem;"></i>
+                        </div>
+                    {% endif %}
+                    
+                    {% if user.is_staff or user == equipo.entrenador %}
+                    <button class="btn btn-dark btn-sm rounded-circle position-absolute bottom-0 end-0 shadow border border-2 border-white hover-lift" data-bs-toggle="modal" data-bs-target="#modalLogo">
+                        <i class="bi bi-camera-fill"></i>
+                    </button>
+                    {% endif %}
+                </div>
+                
+                <h4 class="fw-bold text-dark mb-0">{{ equipo.club }}</h4>
+                <p class="text-muted fw-bold mb-4">{{ equipo.nombre }}</p>
+                <hr class="text-muted opacity-25">
+                
+                <div class="text-start mt-3">
+                    <p class="small text-muted fw-bold mb-1 text-uppercase">Entrenador en Jefe:</p>
+                    <p class="fw-bold text-primary mb-4 bg-primary bg-opacity-10 d-inline-block px-3 py-2 rounded-pill shadow-sm">
+                        <i class="bi bi-person-fill me-1"></i> 
+                        {% if equipo.entrenador %}
+                            {{ equipo.entrenador.first_name }} {{ equipo.entrenador.last_name }}
+                        {% else %}
+                            Sin asignar
+                        {% endif %}
+                    </p>
+                    
+                    <p class="small text-muted fw-bold mb-1 text-uppercase">Total de Jugadores:</p>
+                    <span class="badge bg-secondary rounded-pill fs-6 px-4 py-2 shadow-sm">{{ jugadores_varonil.count|add:jugadores_femenil.count }} Activos</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8 mb-4">
+            <ul class="nav nav-tabs border-0 mb-3" id="equipoTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-bold border-0 text-dark bg-white shadow-sm rounded-top px-4" id="varonil-tab" data-bs-toggle="tab" data-bs-target="#varonil" type="button" role="tab">
+                        Niños (Varonil)
+                    </button>
+                </li>
+                <li class="nav-item ms-2" role="presentation">
+                    <button class="nav-link fw-bold border-0 text-muted bg-light rounded-top px-4" id="femenil-tab" data-bs-toggle="tab" data-bs-target="#femenil" type="button" role="tab">
+                        Niñas (Femenil)
+                    </button>
+                </li>
+                <li class="nav-item ms-2" role="presentation">
+                    <button class="nav-link fw-bold border-0 text-muted bg-light rounded-top px-4" id="staff-tab" data-bs-toggle="tab" data-bs-target="#staff" type="button" role="tab">
+                        Cuerpo Técnico
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content bg-white p-0 shadow-sm rounded-4 rounded-top-0 border-top border-4 border-primary overflow-hidden" id="equipoTabsContent">
+                
+                <div class="tab-pane fade show active p-4" id="varonil" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light text-muted small">
+                                <tr>
+                                    <th class="ps-3">#</th>
+                                    <th>JUGADOR</th>
+                                    <th>PLAYERA</th>
+                                    <th>AÑO NAC.</th>
+                                    <th>CURP / FOLIO</th>
+                                    <th>TORNEOS ACTIVOS</th>
+                                    <th>DÍA REG.</th>
+                                    <th>ESTATUS</th>
+                                    <th class="text-end pe-3">ACCIÓN</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for j in jugadores_varonil %}
+                                <tr>
+                                    <td class="text-muted fw-bold ps-3">{{ forloop.counter }}</td>
+                                    <td><span class="fw-bold text-dark">{{ j.nombres }} {{ j.apellido_paterno }}</span></td>
+                                    <td><span class="badge bg-dark fs-6 shadow-sm">#{{ j.numero_camiseta|default:"-" }}</span></td>
+                                    <td><span class="text-primary fw-bold">{{ j.fecha_nacimiento.year|default:"-" }}</span></td>
+                                    <td>
+                                        <small class="d-block text-muted">{{ j.curp }}</small>
+                                        <small class="fw-bold text-dark">{{ j.numero_afiliacion|default:"Pendiente" }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-wrap gap-1" style="max-width: 140px;">
+                                            {% for torneo in j.torneos_activos %}
+                                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary small" style="font-size: 0.70rem;">{{ torneo.temporada.nombre }}</span>
+                                            {% empty %}
+                                                <span class="badge bg-light text-muted border small" style="font-size: 0.70rem;">Ninguno</span>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small class="fw-bold text-secondary">{{ j.historial_equipos.first.fecha_registro|date:"d/m/y"|default:"Reciente" }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ j.semaforo.color }} bg-opacity-10 text-{{ j.semaforo.color }} border border-{{ j.semaforo.color }} rounded-pill px-2 py-1">
+                                            <i class="bi {{ j.semaforo.icono }} me-1"></i> {{ j.semaforo.estatus }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end pe-3">
+                                    {% if es_admin_secre %}
+                                        
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-light border dropdown-toggle fw-bold shadow-sm" type="button" data-bs-toggle="dropdown">
+                                                Opciones
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow">
+                                                <li>
+                                                    <a class="dropdown-item fw-semibold" href="{% url 'perfil_jugador' j.id %}">
+                                                        <i class="bi bi-person-lines-fill me-2 text-primary"></i> Ver al jugador
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item fw-semibold" href="{% url 'gestion_sanciones_jugador' j.id %}">
+                                                        <i class="bi bi-gavel me-2 text-danger"></i> Sanciones
+                                                    </a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <form action="{% url 'dar_de_baja_jugador' j.id %}" method="POST" class="m-0 p-0">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="dropdown-item text-warning fw-bold" onclick="return confirm('¿Dar de baja a este jugador de este club? Seguirá en el sistema.');">
+                                                            <i class="bi bi-person-dash me-2"></i> Dar de baja del equipo
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form action="{% url 'eliminar_jugador' j.id %}" method="POST" class="m-0 p-0">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="dropdown-item text-danger fw-bold" onclick="return confirm('¿Estás seguro de ELIMINAR a este jugador del sistema por completo? Esta acción NO se puede deshacer.');">
+                                                            <i class="bi bi-person-x-fill me-2"></i> Dar de baja del sistema
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
+
+                                    {% else %}
+                                        <a href="{% url 'perfil_jugador' j.id %}" class="btn btn-sm btn-primary rounded-pill fw-bold px-3 shadow-sm">
+                                            <i class="bi bi-person-lines-fill me-1"></i> Ver Perfil
+                                        </a>
+                                    {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="9" class="text-center text-muted py-5 fw-bold">No hay jugadores registrados en esta rama.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade p-4" id="femenil" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light text-muted small">
+                                <tr>
+                                    <th class="ps-3">#</th>
+                                    <th>JUGADORA</th>
+                                    <th>PLAYERA</th>
+                                    <th>AÑO NAC.</th>
+                                    <th>CURP / FOLIO</th>
+                                    <th>TORNEOS ACTIVOS</th>
+                                    <th>DÍA REG.</th>
+                                    <th>ESTATUS</th>
+                                    <th class="text-end pe-3">ACCIÓN</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for j in jugadores_femenil %}
+                                <tr>
+                                    <td class="text-muted fw-bold ps-3">{{ forloop.counter }}</td>
+                                    <td><span class="fw-bold text-dark">{{ j.nombres }} {{ j.apellido_paterno }}</span></td>
+                                    <td><span class="badge bg-dark fs-6 shadow-sm">#{{ j.numero_camiseta|default:"-" }}</span></td>
+                                    <td><span class="text-primary fw-bold">{{ j.fecha_nacimiento.year|default:"-" }}</span></td>
+                                    <td>
+                                        <small class="d-block text-muted">{{ j.curp }}</small>
+                                        <small class="fw-bold text-dark">{{ j.numero_afiliacion|default:"Pendiente" }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-wrap gap-1" style="max-width: 140px;">
+                                            {% for torneo in j.torneos_activos %}
+                                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary small" style="font-size: 0.70rem;">{{ torneo.temporada.nombre }}</span>
+                                            {% empty %}
+                                                <span class="badge bg-light text-muted border small" style="font-size: 0.70rem;">Ninguno</span>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small class="fw-bold text-secondary">{{ j.historial_equipos.first.fecha_registro|date:"d/m/y"|default:"Reciente" }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ j.semaforo.color }} bg-opacity-10 text-{{ j.semaforo.color }} border border-{{ j.semaforo.color }} rounded-pill px-2 py-1">
+                                            <i class="bi {{ j.semaforo.icono }} me-1"></i> {{ j.semaforo.estatus }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end pe-3">
+                                    {% if es_admin_secre %}
+                                        
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-light border dropdown-toggle fw-bold shadow-sm" type="button" data-bs-toggle="dropdown">
+                                                Opciones
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow">
+                                                <li>
+                                                    <a class="dropdown-item fw-semibold" href="{% url 'perfil_jugador' j.id %}">
+                                                        <i class="bi bi-person-lines-fill me-2 text-primary"></i> Ver a la jugadora
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item fw-semibold" href="{% url 'gestion_sanciones_jugador' j.id %}">
+                                                        <i class="bi bi-gavel me-2 text-danger"></i> Sanciones
+                                                    </a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <form action="{% url 'dar_de_baja_jugador' j.id %}" method="POST" class="m-0 p-0">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="dropdown-item text-warning fw-bold" onclick="return confirm('¿Dar de baja a esta jugadora de este club? Seguirá en el sistema.');">
+                                                            <i class="bi bi-person-dash me-2"></i> Dar de baja del equipo
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li>
+                                                    <form action="{% url 'eliminar_jugador' j.id %}" method="POST" class="m-0 p-0">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="dropdown-item text-danger fw-bold" onclick="return confirm('¿Estás seguro de ELIMINAR a esta jugadora del sistema por completo? Esta acción NO se puede deshacer.');">
+                                                            <i class="bi bi-person-x-fill me-2"></i> Dar de baja del sistema
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
+
+                                    {% else %}
+                                        <a href="{% url 'perfil_jugador' j.id %}" class="btn btn-sm btn-primary rounded-pill fw-bold px-3 shadow-sm">
+                                            <i class="bi bi-person-lines-fill me-1"></i> Ver Perfil
+                                        </a>
+                                    {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="9" class="text-center text-muted py-5 fw-bold">No hay jugadoras registradas en esta rama.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade p-4" id="staff" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light text-muted small">
+                                <tr>
+                                    <th class="ps-3">NOMBRE COMPLETO</th>
+                                    <th>CARGO / ROL</th>
+                                    <th>TELÉFONO</th>
+                                    <th class="text-end pe-3">ACCIÓN</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for m in staff %}
+                                <tr>
+                                    <td class="ps-3">
+                                        {% if m.foto %}
+                                            <img src="{{ m.foto.url }}" class="rounded-circle me-2 object-fit-cover shadow-sm border border-2 border-white" width="40" height="40" alt="Foto Staff">
+                                        {% else %}
+                                            <i class="bi bi-person-circle text-secondary fs-3 me-2 align-middle"></i>
+                                        {% endif %}
+                                        <span class="fw-bold text-dark">{{ m.nombres }} {{ m.apellidos }}</span>
+                                    </td>
+                                    <td><span class="badge bg-info text-dark rounded-pill px-3 py-1 shadow-sm">{{ m.cargo|default:"Asistente" }}</span></td>
+                                    <td><span class="fw-bold text-secondary">{{ m.telefono|default:"-" }}</span></td>
+                                    <td class="text-end pe-3">
+                                        <button class="btn btn-sm btn-dark rounded-pill fw-bold shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#modalStaffInfo{{ m.id }}">
+                                            <i class="bi bi-person-vcard me-1"></i> Ver Perfil
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary rounded-circle shadow-sm ms-1" title="Editar" data-bs-toggle="modal" data-bs-target="#modalStaffEdit{{ m.id }}">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </button>
+                                        <a href="{% url 'eliminar_staff' m.id %}" class="btn btn-sm btn-outline-danger rounded-circle shadow-sm ms-1" onclick="return confirm('¿Quitar a esta persona del cuerpo técnico?');">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+
+                                <div class="modal fade" id="modalStaffInfo{{ m.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered modal-sm">
+                                        <div class="modal-content rounded-4 border-0 shadow-lg">
+                                            <div class="modal-header border-0 pb-0 justify-content-end">
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body text-center pt-0 pb-4 px-4">
+                                                {% if m.foto %}
+                                                    <img src="{{ m.foto.url }}" class="rounded-circle object-fit-cover shadow border border-3 border-white mb-3" width="120" height="120">
+                                                {% else %}
+                                                    <div class="bg-light rounded-circle shadow-sm border mx-auto d-flex align-items-center justify-content-center mb-3" style="width: 120px; height: 120px;">
+                                                        <i class="bi bi-person text-secondary" style="font-size: 4rem;"></i>
+                                                    </div>
+                                                {% endif %}
+                                                <h4 class="fw-bold mb-1 text-dark">{{ m.nombres }}</h4>
+                                                <h5 class="text-muted mb-4">{{ m.apellidos }}</h5>
+                                                
+                                                <div class="bg-light rounded-4 p-3 text-start shadow-sm border">
+                                                    <p class="small text-muted fw-bold mb-1 text-uppercase">Cargo Oficial</p>
+                                                    <p class="fw-bold text-dark mb-2"><i class="bi bi-briefcase-fill text-primary me-2"></i> {{ m.cargo|default:"No especificado" }}</p>
+                                                    
+                                                    <p class="small text-muted fw-bold mb-1 text-uppercase">Teléfono</p>
+                                                    <p class="fw-bold text-dark mb-2"><i class="bi bi-telephone-fill text-success me-2"></i> {{ m.telefono|default:"No registrado" }}</p>
+                                                    
+                                                    <p class="small text-muted fw-bold mb-1 text-uppercase">CURP</p>
+                                                    <p class="fw-bold text-dark mb-0"><i class="bi bi-person-vcard-fill text-info me-2"></i> {{ m.curp|default:"No registrado" }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="modal fade" id="modalStaffEdit{{ m.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content rounded-4 border-0 shadow">
+                                            <form action="{% url 'editar_staff' m.id %}" method="POST" enctype="multipart/form-data">
+                                                {% csrf_token %}
+                                                <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                                                    <h5 class="fw-bold text-dark"><i class="bi bi-pencil-square text-secondary me-2"></i> Editar Staff</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body px-4">
+                                                    <div class="row g-3">
+                                                        <div class="col-6">
+                                                            <label class="fw-bold small mb-1 text-muted">Nombre(s)</label>
+                                                            <input type="text" name="nombres" value="{{ m.nombres }}" class="form-control" required>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <label class="fw-bold small mb-1 text-muted">Apellidos</label>
+                                                            <input type="text" name="apellidos" value="{{ m.apellidos }}" class="form-control" required>
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <label class="fw-bold small mb-1 text-muted">Cargo</label>
+                                                            <select name="cargo" class="form-select">
+                                                                <option value="Entrenador Principal" {% if m.cargo == 'Entrenador Principal' %}selected{% endif %}>Entrenador Principal</option>
+                                                                <option value="Asistente 1" {% if m.cargo == 'Asistente 1' %}selected{% endif %}>Asistente 1</option>
+                                                                <option value="Asistente 2" {% if m.cargo == 'Asistente 2' %}selected{% endif %}>Asistente 2</option>
+                                                                <option value="Asistente 3" {% if m.cargo == 'Asistente 3' %}selected{% endif %}>Asistente 3</option>
+                                                                <option value="Prep. Físico" {% if m.cargo == 'Prep. Físico' %}selected{% endif %}>Prep. Físico</option>
+                                                                <option value="Médico" {% if m.cargo == 'Médico' %}selected{% endif %}>Médico</option>
+                                                                <option value="Delegado" {% if m.cargo == 'Delegado' %}selected{% endif %}>Delegado</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <label class="fw-bold small mb-1 text-muted">Teléfono</label>
+                                                            <input type="text" name="telefono" value="{{ m.telefono|default:'' }}" class="form-control">
+                                                        </div>
+                                                        <div class="col-6">
+                                                            <label class="fw-bold small mb-1 text-muted">CURP</label>
+                                                            <input type="text" name="curp" value="{{ m.curp|default:'' }}" class="form-control">
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <label class="fw-bold small mb-1 text-muted">Foto</label>
+                                                            <input type="file" name="foto" class="form-control" accept="image/*">
+                                                            <small class="text-muted">Dejar vacío para mantener la foto actual.</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer border-top-0 pt-3 pb-4 px-4">
+                                                    <button type="button" class="btn btn-light rounded-pill fw-bold border shadow-sm" data-bs-dismiss="modal">Cancelar</button>
+                                                    <button type="submit" class="btn btn-dark rounded-pill fw-bold px-4 shadow-sm">Guardar Cambios</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <tr><td colspan="4" class="text-center text-muted py-5 fw-bold">No hay miembros del cuerpo técnico registrados.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalLogo" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <form action="{% url 'cambiar_logo_equipo' equipo.id %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                    <h5 class="fw-bold text-dark"><i class="bi bi-image text-primary me-2"></i> Actualizar Escudo / Logo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body px-4">
+                    <input type="file" name="logo" class="form-control form-control-lg shadow-sm" accept="image/*" required>
+                </div>
+                <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
+                    <button type="button" class="btn btn-light rounded-pill fw-bold border shadow-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary rounded-pill fw-bold px-4 shadow-sm">Guardar Logo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalFicharCurp" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <form action="{% url 'gestionar_equipo' equipo.id %}" method="POST">
+                {% csrf_token %}
+                <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                    <h5 class="fw-bold text-dark"><i class="bi bi-search text-primary me-2"></i> Buscar y Fichar Jugador</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body px-4">
+                    <div class="alert alert-info bg-info bg-opacity-10 border-0 rounded-4 shadow-sm mb-4">
+                        <i class="bi bi-info-circle-fill me-2"></i> Pídele al padre de familia que te proporcione la CURP del jugador que ya registró en el sistema para vincularlo a tu equipo.
+                    </div>
+                    <label class="fw-bold small mb-2 text-muted">CURP del Jugador:</label>
+                    <input type="text" name="curp_busqueda" class="form-control form-control-lg text-uppercase shadow-sm fw-bold" placeholder="Ej. ABCD123456EFGHIJ78" required maxlength="18">
+                </div>
+                <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
+                    <button type="button" class="btn btn-light rounded-pill fw-bold border shadow-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" name="btn_vincular_curp" class="btn btn-primary rounded-pill fw-bold px-4 shadow-sm">Buscar y Vincular</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% if user.is_staff %}
+<div class="modal fade" id="modalEditarEquipo" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <form action="{% url 'gestionar_equipo' equipo.id %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                    <h5 class="fw-bold text-dark"><i class="bi bi-pencil-square text-primary me-2"></i> Editar Perfil del Club</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body px-4">
+                    {{ form_edicion_equipo.as_p }}
+                </div>
+                <div class="modal-footer border-top-0 pt-0 pb-4 px-4">
+                    <button type="button" class="btn btn-light rounded-pill fw-bold border shadow-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" name="btn_editar_equipo" class="btn btn-dark rounded-pill fw-bold px-4 shadow-sm">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAltaManual" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <form action="{% url 'gestionar_equipo' equipo.id %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                    <h5 class="fw-bold text-dark"><i class="bi bi-person-plus-fill text-success me-2"></i> Alta Manual de Jugador</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body px-4">
+                    <div class="row g-4">
+                        {% for field in form %}
+                            <div class="col-md-6">
+                                <label class="fw-bold small mb-1 text-muted">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.errors %}
+                                    <div class="text-danger small mt-1 fw-bold"><i class="bi bi-exclamation-circle me-1"></i> {{ field.errors }}</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-3 pb-4 px-4">
+                    <button type="button" class="btn btn-light rounded-pill fw-bold border shadow-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" name="btn_jugador" class="btn btn-success rounded-pill fw-bold px-4 shadow-sm">Registrar Jugador</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="modal fade" id="modalStaff" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow">
+            <form action="{% url 'gestionar_equipo' equipo.id %}" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                    <h5 class="fw-bold text-dark"><i class="bi bi-person-badge-fill text-secondary me-2"></i> Añadir Miembro del Staff</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body px-4">
+                    <div class="row g-3">
+                        {% for field in form_staff %}
+                            <div class="col-12">
+                                <label class="fw-bold small mb-1 text-muted">{{ field.label }}</label>
+                                {{ field }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-3 pb-4 px-4">
+                    <button type="button" class="btn btn-light rounded-pill fw-bold border shadow-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" name="btn_staff" class="btn btn-secondary rounded-pill fw-bold px-4 shadow-sm">Añadir al Cuerpo Técnico</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function(){
+        // 1. Lógica de las pestañas
+        var tabTriggerList = [].slice.call(document.querySelectorAll('#equipoTabs button'))
+        tabTriggerList.forEach(function (tabTriggerEl) {
+            tabTriggerEl.addEventListener('click', function (event) {
+                event.preventDefault()
+                document.querySelectorAll('#equipoTabs button').forEach(b => {
+                    b.classList.remove('text-dark', 'bg-white');
+                    b.classList.add('text-muted', 'bg-light');
+                });
+                this.classList.remove('text-muted', 'bg-light');
+                this.classList.add('text-dark', 'bg-white');
+            })
+        });
+        
+        // 2. Lógica segura de Modales
+        const abrirModalJugador = "{{ abrir_modal }}" === "True";
+        const abrirModalStaff = "{{ abrir_modal_staff }}" === "True";
+
+        if (abrirModalJugador) {
+            const elementoModal = document.getElementById('modalAltaManual');
+            if (elementoModal) new bootstrap.Modal(elementoModal).show();
+        }
+
+        if (abrirModalStaff) {
+            const elementoStaff = document.getElementById('modalStaff');
+            if (elementoStaff) new bootstrap.Modal(elementoStaff).show();
+        }
+    });
+</script>
+{% endblock %}

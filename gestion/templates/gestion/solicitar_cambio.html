@@ -1,0 +1,59 @@
+{% extends 'gestion/base_dashboard.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="bg-primary text-white p-4 text-center">
+                    <i class="bi bi-arrow-left-right display-4 mb-2 d-block"></i>
+                    <h3 class="fw-bold mb-0">Solicitud de Cambio de Club</h3>
+                </div>
+                
+                <div class="card-body p-4 p-md-5">
+                    <div class="text-center mb-4">
+                        {% if jugador.foto_perfil %}
+                            <img src="{{ jugador.foto_perfil.url }}" class="rounded-circle shadow-sm border border-3 border-light mb-3" style="width: 100px; height: 100px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-secondary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3 shadow-sm border border-3 border-light" style="width: 100px; height: 100px; font-size: 2rem;">
+                                {{ jugador.nombres|first }}
+                            </div>
+                        {% endif %}
+                        <h5 class="fw-bold text-dark">{{ jugador.nombres }} {{ jugador.apellido_paterno }}</h5>
+                        <p class="text-muted mb-0">Club de Origen: <span class="badge bg-secondary">{{ jugador.equipo.club|default:"Sin Club" }}</span></p>
+                    </div>
+
+                    <div class="alert alert-warning border-0 rounded-4 shadow-sm p-3 mb-4 small">
+                        <i class="bi bi-info-circle-fill me-2"></i> 
+                        <strong>Atención Tutor:</strong> Una vez enviada esta solicitud, la mesa directiva auditará el expediente del jugador y verificará con el club actual que no existan adeudos de colegiaturas o material antes de autorizar su transferencia.
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.equipo_destino.id_for_label }}" class="form-label fw-bold text-dark">
+                                <i class="bi bi-shield-fill-check me-1 text-primary"></i> {{ form.equipo_destino.label }}
+                            </label>
+                            {{ form.equipo_destino }}
+                            {% if form.equipo_destino.errors %}
+                                <div class="text-danger small mt-1">{{ form.equipo_destino.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-5">
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold rounded-pill shadow-sm">
+                                <i class="bi bi-send-fill me-2"></i> Enviar Solicitud a ADEMEBA
+                            </button>
+                            <a href="{% url 'dashboard' %}" class="btn btn-light btn-lg fw-bold rounded-pill border shadow-sm text-secondary">
+                                <i class="bi bi-x-circle me-2"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

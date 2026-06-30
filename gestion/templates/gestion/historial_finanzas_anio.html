@@ -1,0 +1,131 @@
+{% extends 'gestion/base_dashboard.html' %}
+{% block header_title %}Finanzas {{ anio }}{% endblock %}
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="{% url 'historial_finanzas' %}" class="btn btn-sm btn-light border mb-2">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+            <h4 class="fw-bold mb-0">Movimientos {{ anio }}</h4>
+        </div>
+        <a href="{% url 'descargar_excel_finanzas' anio %}{% if request.GET %}?{{ request.GET.urlencode }}{% endif %}" class="btn btn-success fw-bold rounded-pill px-4 shadow-sm">
+            <i class="bi bi-file-earmark-excel-fill me-2"></i> Exportar a Excel
+        </a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 bg-success text-white rounded-4 p-4 shadow-sm">
+                <h6 class="fw-bold mb-1 opacity-75">INGRESOS COBRADOS</h6>
+                <h3 class="fw-bold mb-0">${{ total_cobrado }}</h3>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 bg-danger text-white rounded-4 p-4 shadow-sm">
+                <h6 class="fw-bold mb-1 opacity-75">FONDOS PENDIENTES (DEUDA)</h6>
+                <h3 class="fw-bold mb-0">${{ total_pendiente }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3 d-flex flex-wrap gap-2">
+        <a href="?estado=" class="btn btn-sm {% if not request.GET.estado %}btn-dark{% else %}btn-outline-dark{% endif %} rounded-pill fw-semibold">Todos</a>
+        <a href="?estado=PAGADO" class="btn btn-sm {% if request.GET.estado == 'PAGADO' %}btn-success{% else %}btn-outline-success{% endif %} rounded-pill fw-semibold">Pagados</a>
+        <a href="?estado=REVISION" class="btn btn-sm {% if request.GET.estado == 'REVISION' %}btn-warning{% else %}btn-outline-warning{% endif %} rounded-pill fw-semibold">En Revisión</a>
+        <a href="?estado=PENDIENTE" class="btn btn-sm {% if request.GET.estado == 'PENDIENTE' %}btn-danger{% else %}btn-outline-danger{% endif %} rounded-pill fw-semibold">Pendientes</a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 bg-white">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light small text-muted">
+                    <tr>
+                        <th class="ps-4">FECHA</th>
+                        <th>ASIGNADO A</th>
+                        <th>CONCEPTO</th>
+                        <th>MONTO</th>
+                        <th>ESTATUS</th>
+                        <th>COMPROBANTE</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in adeudos %}
+                    <tr>
+                        <td class="ps-4 small text-muted">{{ a.fecha_creacion|date:"d/m/Y" }}</td>
+                        <td class="fw-bold">
+                            {% if a.equipo %}
+                                {{ a.equipo.club }}
+                            {% elif a.jugador %}
+                                {{ a.jugador.nombres }}
+                            {% else %}
+                                <span class="text-danger fst-italic"><i class="bi bi-exclamation-triangle"></i> Registro desvinculado</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ a.concepto }}</td>
+                        <td class="fw-bold {% if a.estado == 'PAGADO' %}text-success{% else %}text-danger{% endif %}">${{ a.monto }}</td>
+                        <td>
+                            {% if a.estado == 'PAGADO' %}
+                                <span class="badge bg-success rounded-pill">Pagado</span>
+                            {% elif a.estado == 'REVISION' %}
+                                <span class="badge bg-warning text-dark rounded-pill">Revisión</span>
+                            {% else %}
+                                <span class="badge bg-danger rounded-pill">Pendiente</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if a.voucher_comprobante %}
+                                <a href="{{ a.voucher_comprobante.url }}" target="_blank" class="btn btn-sm btn-outline-primary shadow-sm" title="Ver comprobante"><i class="bi bi-file-earmark-text"></i> Ver Voucher</a>
+                            {% elif a.jugador and a.jugador.archivo_pago %}
+                                <a href="{{ a.jugador.archivo_pago.url }}" target="_blank" class="btn btn-sm btn-outline-info shadow-sm" title="Voucher de Registro"><i class="bi bi-person-vcard"></i> Voucher Registro</a>
+                            {% else %}
+                                <span class="text-muted small fw-bold">N/A</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-5">
+                            <i class="bi bi-inbox display-4 d-block mb-3 opacity-50"></i>
+                            No hay movimientos registrados que coincidan con esta búsqueda.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if adeudos.has_other_pages %}
+    <nav aria-label="Navegación de registros" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if adeudos.has_previous %}
+                <li class="page-item">
+                    <a class="page-link shadow-sm" href="?page={{ adeudos.previous_page_number }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">Anterior</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+            {% endif %}
+
+            {% for i in adeudos.paginator.page_range %}
+                {% if adeudos.number == i %}
+                    <li class="page-item active"><span class="page-link shadow-sm">{{ i }}</span></li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link shadow-sm" href="?page={{ i }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">{{ i }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if adeudos.has_next %}
+                <li class="page-item">
+                    <a class="page-link shadow-sm" href="?page={{ adeudos.next_page_number }}{% if request.GET.estado %}&estado={{ request.GET.estado }}{% endif %}">Siguiente</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

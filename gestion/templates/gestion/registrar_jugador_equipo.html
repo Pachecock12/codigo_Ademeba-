@@ -1,0 +1,80 @@
+{% extends 'gestion/base_dashboard.html' %}
+{% load static %}
+
+{% block header_title %}Registro para {{ equipo.club }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-dark mb-1"><i class="bi bi-person-plus-fill text-primary me-2"></i> Alta de Jugador</h3>
+            <p class="text-secondary mb-0">Llenando registro para el club: <strong>{{ equipo.club }}</strong></p>
+        </div>
+        <a href="{% url 'equipos_tutor' %}" class="btn btn-light border rounded-pill px-4 shadow-sm fw-bold">
+            <i class="bi bi-arrow-left me-2"></i> Cambiar Equipo
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mx-auto" style="max-width: 900px;">
+        
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="alert alert-info border-0 shadow-sm rounded-4 mb-0 flex-grow-1 me-3">
+                <i class="bi bi-info-circle-fill me-2"></i><strong>Límite de intentos:</strong> Máximo 3 oportunidades. Peso máximo por archivo: 5MB.
+                {% if config and config.costo_inscripcion %}
+                <br><i class="bi bi-currency-dollar me-1"></i><strong>Costo de inscripción: ${{ config.costo_inscripcion }}</strong>
+                {% endif %}
+            </div>
+            <div class="text-center flex-shrink-0">
+                <span class="badge bg-{% if jugadores_activos >= equipo.max_jugadores %}danger{% else %}success{% endif %} fs-6 rounded-pill px-3 py-2">
+                    <i class="bi bi-people-fill me-1"></i>{{ jugadores_activos|default:0 }}/{{ equipo.max_jugadores }}
+                </span>
+                <small class="d-block text-muted mt-1">Jugadores activos</small>
+            </div>
+        </div>
+
+       <div class="alert shadow-sm rounded-3 mb-4 border-0" style="background-color: #e3f2fd; color: #084298;">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div>
+                    <i class="bi bi-file-earmark-pdf-fill fs-4 me-2 align-middle"></i>
+                    <span class="align-middle"><strong>Paso 1:</strong> Descarga, imprime y recaba las firmas del formato de afiliación antes de llenar los campos de abajo.</span>
+                </div>
+                <a href="{% static 'gestion/pdfs/afiliacion_jugador.pdf' %}" download="Formato_Afiliacion_ADEMEBA.pdf" class="btn btn-primary btn-sm fw-bold rounded-pill px-4 shadow-sm text-nowrap">
+                    <i class="bi bi-download me-1"></i> Descargar Formato
+                </a>
+            </div>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+                <div class="alert alert-danger shadow-sm border-0 rounded-3 mb-4">
+                    <h6 class="fw-bold mb-2"><i class="bi bi-exclamation-triangle-fill"></i> Por favor, corrige lo siguiente:</h6>
+                    <ul class="mb-0 small fw-bold">
+                        {% for field in form %}
+                            {% for error in field.errors %}<li>{{ field.label }}: {{ error }}</li>{% endfor %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <div class="row">
+                <style>
+                    form input, form select { 
+                        width: 100%; padding: 0.6rem 0.8rem; border: 1px solid #ced4da; border-radius: 0.5rem; margin-bottom: 1rem; font-size: 0.95rem;
+                    }
+                    form label { font-weight: bold; font-size: 0.85rem; color: #495057; margin-bottom: 0.3rem; display: block; }
+                </style>
+                {{ form.as_p }}
+            </div>
+            
+            <hr class="my-4">
+            
+            <button type="submit" name="btn_registrar_hijo" class="btn btn-primary btn-lg fw-bold rounded-pill w-100 shadow-sm">
+                <i class="bi bi-cloud-arrow-up-fill me-2"></i> Subir Documentos y Enviar a Revisión
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

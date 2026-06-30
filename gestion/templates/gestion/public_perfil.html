@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validación Oficial - {{ jugador.nombres }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f1f5f9; font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; }
+        
+        /* Contenedor que simula pantalla de celular en escritorio */
+        .mobile-wrapper { max-width: 480px; margin: 0 auto; background: white; min-height: 100vh; box-shadow: 0 0 25px rgba(0,0,0,0.15); }
+        
+        .header-top { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 1.5rem; text-align: center; border-bottom: 4px solid #e4a11b; }
+        .header-top h3 { color: white; margin: 0; font-weight: 900; letter-spacing: 1px; font-size: 1.2rem; }
+        
+        .profile-content { position: relative; padding: 0 1.5rem 2rem 1.5rem; text-align: center; margin-top: -3.5rem;}
+        .photo-container { width: 130px; height: 130px; border-radius: 50%; border: 5px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.15); margin: 0 auto 1rem auto; background: #e2e8f0; overflow: hidden; position: relative; z-index: 10;}
+        .photo-container img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .status-badge { font-size: 1.1rem; padding: 0.8rem 1.5rem; border-radius: 50rem; font-weight: 900; letter-spacing: 0.5px; display: inline-flex; align-items: center; justify-content: center; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.1); min-height: 48px; }
+        
+        .alert-box { background-color: #fff3cd; color: #856404; padding: 1rem; border-radius: 0.8rem; border-left: 5px solid #ffeeba; margin-bottom: 1.5rem; text-align: left; font-size: 0.9rem; font-weight: 600; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .alert-danger-box { background-color: #f8d7da; color: #721c24; border-left-color: #f5c6cb; }
+        .alert-secondary-box { background-color: #e2e3e5; color: #383d41; border-left-color: #d6d8db; }
+
+        .data-row { display: flex; justify-content: space-between; padding: 0.8rem 0; border-bottom: 1px dashed #e2e8f0; text-align: left; align-items: center; }
+        .data-label { color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;}
+        .data-value { color: #0f172a; font-weight: 800; font-size: 0.95rem; text-align: right; }
+        
+        .section-title { text-align: left; font-weight: 800; color: #cbd5e1; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; margin: 2rem 0 0.5rem 0; border-bottom: 2px solid #f1f5f9; padding-bottom: 0.5rem; }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-wrapper">
+        <div class="header-top">
+            <h3 class="mb-1">ADEMEBA OAXACA</h3>
+            <p class="text-white opacity-75 small mb-4 pb-3">Sistema de Mesa de Control</p>
+        </div>
+
+        <div class="profile-content">
+            <div class="photo-container">
+                {% if jugador.foto_perfil %}
+                    <img src="{{ jugador.foto_perfil.url }}" alt="Foto del Jugador">
+                {% else %}
+                    <i class="bi bi-person-fill text-secondary d-flex justify-content-center align-items-center h-100" style="font-size: 5rem;"></i>
+                {% endif %}
+            </div>
+
+            <h3 class="fw-bold text-dark mb-0">{{ jugador.nombres }}</h3>
+            <h5 class="text-muted fw-bold mb-4">{{ jugador.apellido_paterno }} {{ jugador.apellido_materno }}</h5>
+
+            <div class="mb-4">
+                <div class="status-badge bg-{{ color|default:'secondary' }} {% if color == 'warning' %}text-dark{% else %}text-white{% endif %}">
+                    <i class="bi {{ icono|default:'bi-question-circle-fill' }} me-2 fs-4"></i> 
+                    {{ estatus|default:'ESTATUS DESCONOCIDO' }}
+                </div>
+            </div>
+
+            {% if mensaje_alerta %}
+            <div class="alert-box {% if color == 'danger' %}alert-danger-box{% elif color == 'secondary' %}alert-secondary-box{% endif %}">
+                <i class="bi bi-exclamation-triangle-fill me-2 fs-5 float-start"></i> 
+                <span>{{ mensaje_alerta }}</span>
+            </div>
+            {% endif %}
+
+            <div class="section-title">Información Deportiva</div>
+            
+            <div class="data-row">
+                <span class="data-label">Club Actual</span>
+                <span class="data-value text-primary"><i class="bi bi-shield-fill me-1"></i> {{ jugador.equipo.club|default:"Agente Libre" }}</span>
+            </div>
+            
+            <div class="data-row">
+                <span class="data-label">Ligas / Torneos</span>
+                <span class="data-value">
+                    {% for torneo in torneos %}
+                        <span class="badge bg-dark bg-opacity-10 text-dark border mb-1 d-block fw-bold">{{ torneo }}</span>
+                    {% empty %}
+                        <span class="text-muted small">Ninguno activo</span>
+                    {% endfor %}
+                </span>
+            </div>
+
+            <div class="data-row">
+                <span class="data-label">Categoría / Rama</span>
+                <span class="data-value">Cat. {{ jugador.fecha_nacimiento.year|default:"-" }} | {{ jugador.rama|default:"-" }}</span>
+            </div>
+
+            <div class="section-title">Datos de Afiliación</div>
+
+            <div class="data-row">
+                <span class="data-label">No. Afiliación</span>
+                <span class="data-value">{{ jugador.numero_afiliacion|default:"Pendiente" }}</span>
+            </div>
+            
+            <div class="data-row">
+                <span class="data-label">CURP</span>
+                <span class="data-value">{{ jugador.curp }}</span>
+            </div>
+
+            <div class="data-row border-0">
+                <span class="data-label">Tipo de Sangre</span>
+                <span class="data-value text-danger"><i class="bi bi-droplet-fill me-1"></i> {{ jugador.tipo_sangre }}</span>
+            </div>
+            
+            <div class="mt-4 pb-3">
+                <p class="text-muted small" style="font-size: 0.7rem;">Documento digital validado en tiempo real. La falsificación de identidad está penalizada por los reglamentos de ADEMEBA.</p>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,228 @@
+{% extends 'gestion/base_dashboard.html' %}
+{% load static %}
+
+{% block header_title %}Disciplina / Sanciones{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0">Panel de Disciplina</h4>
+            <p class="text-muted small mb-0">Registro y seguimiento de sanciones y multas.</p>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} fw-bold shadow-sm border-0 rounded-4">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+                <h5 class="fw-bold mb-4 border-bottom pb-2">
+                    <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i> Sanciones Activas
+                    <span class="badge bg-danger ms-2">{{ sanciones_activas.paginator.count }}</span>
+                </h5>
+                {% if sanciones_activas %}
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead class="table-light text-muted small">
+                            <tr>
+                                <th>JUGADOR</th>
+                                <th>TIPO</th>
+                                <th>SUSPENSIÓN</th>
+                                <th>CUMPLIDOS</th>
+                                <th>MULTA</th>
+                                <th class="text-end">ACCIÓN</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in sanciones_activas %}
+                            <tr>
+                                <td class="fw-bold">{{ s.jugador.nombres|default:"N/A" }} {{ s.jugador.apellido_paterno|default:"" }}</td>
+                                <td><span class="badge bg-secondary rounded-pill">{{ s.get_tipo_display }}</span></td>
+                                <td>{{ s.juegos_suspension }} juegos</td>
+                                <td>{{ s.juegos_cumplidos }} / {{ s.juegos_suspension }}</td>
+                                <td class="fw-bold text-danger">${{ s.monto_multa }}</td>
+                                <td class="text-end">
+                                    <form method="POST" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="sancion_id" value="{{ s.id }}">
+                                        <button type="submit" name="btn_cumplir" class="btn btn-success btn-sm rounded-pill fw-bold px-3">
+                                            <i class="bi bi-check-circle me-1"></i> Cumplir +1
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-check-circle-fill text-success fs-1 d-block mb-2"></i>
+                    No hay sanciones activas.
+                </div>
+                {% endif %}
+                {% if sanciones_activas.has_other_pages %}
+                <nav aria-label="Navegación de sanciones" class="mt-3">
+                    <ul class="pagination justify-content-center">
+                        {% if sanciones_activas.has_previous %}
+                            <li class="page-item"><a class="page-link shadow-sm" href="?page={{ sanciones_activas.previous_page_number }}">Anterior</a></li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+                        {% endif %}
+                        {% for i in sanciones_activas.paginator.page_range %}
+                            {% if sanciones_activas.number == i %}
+                                <li class="page-item active"><span class="page-link shadow-sm">{{ i }}</span></li>
+                            {% else %}
+                                <li class="page-item"><a class="page-link shadow-sm" href="?page={{ i }}">{{ i }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+                        {% if sanciones_activas.has_next %}
+                            <li class="page-item"><a class="page-link shadow-sm" href="?page={{ sanciones_activas.next_page_number }}">Siguiente</a></li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <h5 class="fw-bold mb-4 border-bottom pb-2">
+                    <i class="bi bi-clock-history me-2"></i> Historial de Sanciones
+                </h5>
+                {% if historial %}
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead class="table-light text-muted small">
+                            <tr>
+                                <th>FECHA</th>
+                                <th>JUGADOR</th>
+                                <th>TIPO</th>
+                                <th>SUSPENSIÓN</th>
+                                <th>MULTA</th>
+                                <th>ESTADO</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in historial %}
+                            <tr>
+                                <td class="small">{{ s.fecha_sancion|date:"d/m/y" }}</td>
+                                <td class="fw-bold">{{ s.jugador.nombres|default:"N/A" }}</td>
+                                <td><span class="badge bg-secondary rounded-pill">{{ s.get_tipo_display }}</span></td>
+                                <td>{{ s.juegos_suspension }} juegos</td>
+                                <td class="fw-bold text-danger">${{ s.monto_multa }}</td>
+                                <td>
+                                    {% if s.pagada %}
+                                    <span class="badge bg-success rounded-pill"><i class="bi bi-check-circle me-1"></i> Pagada</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary rounded-pill">Pagada</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                    Sin historial de sanciones.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 sticky-top" style="top: 1rem;">
+                <h5 class="fw-bold mb-4"><i class="bi bi-plus-circle me-2"></i> Nueva Sanción</h5>
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small">¿A quién se sancionará?</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipo_sancionado" id="radio_jugador" value="jugador" onchange="toggleSancionado()">
+                                <label class="form-check-label fw-bold" for="radio_jugador">Jugador</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="tipo_sancionado" id="radio_equipo" value="equipo" onchange="toggleSancionado()">
+                                <label class="form-check-label fw-bold" for="radio_equipo">Equipo</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="campo_jugador" class="mb-3" style="display:none">
+                        <label class="form-label fw-bold small">Jugador</label>
+                        <input type="text" id="buscar_jugador" class="form-control" placeholder="Escribe el nombre del jugador..." autocomplete="off">
+                        <div id="sugerencias_jugador" class="list-group" style="display:none; position:absolute; z-index:1000; max-height:200px; overflow-y:auto; width:calc(100% - 3rem);"></div>
+                        <input type="hidden" name="jugador" id="id_jugador_hidden">
+                        <small class="text-muted d-block mt-1" id="jugador_seleccionado"></small>
+                    </div>
+
+                    <div id="campo_entrenador" class="mb-3" style="display:none">
+                        <label class="form-label fw-bold small">Entrenador del equipo</label>
+                        {{ form_sancion.entrenador }}
+                    </div>
+
+                    {% for field in form_sancion %}
+                    {% if field.name != 'jugador' and field.name != 'entrenador' %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}
+                        <small class="text-muted d-block">{{ field.help_text }}</small>
+                        {% endif %}
+                        {% if field.errors %}
+                        <div class="text-danger small mt-1">{{ field.errors }}</div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+
+                    <button type="submit" name="btn_sancionar" class="btn btn-danger w-100 fw-bold rounded-pill py-2 shadow-sm">
+                        <i class="bi bi-gavel me-2"></i> Aplicar Sanción
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{{ jugadores_json|json_script:"jugadores-data" }}
+<script>
+var jugadores = JSON.parse(document.getElementById('jugadores-data').textContent);
+
+function toggleSancionado() {
+    var campoJugador = document.getElementById('campo_jugador');
+    var campoEntrenador = document.getElementById('campo_entrenador');
+    campoJugador.style.display = document.getElementById('radio_jugador').checked ? 'block' : 'none';
+    campoEntrenador.style.display = document.getElementById('radio_jugador').checked ? 'none' : 'block';
+}
+
+function selJugador(id, nombre) {
+    document.getElementById('buscar_jugador').value = nombre;
+    document.getElementById('id_jugador_hidden').value = id;
+    document.getElementById('jugador_seleccionado').textContent = '✓ ' + nombre;
+    document.getElementById('sugerencias_jugador').style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var input = document.getElementById('buscar_jugador');
+    var drop = document.getElementById('sugerencias_jugador');
+    input.addEventListener('input', function() {
+        var t = this.value.toLowerCase().trim();
+        if (t.length < 1) { drop.style.display = 'none'; document.getElementById('id_jugador_hidden').value = ''; document.getElementById('jugador_seleccionado').textContent = ''; return; }
+        var f = jugadores.filter(function(j) { return j.nombre.toLowerCase().startsWith(t); }).slice(0, 10);
+        drop.innerHTML = f.length ? f.map(function(j) { return '<button type="button" class="list-group-item list-group-item-action py-1" onclick="selJugador(' + j.id + ',\'' + j.nombre.replace(/'/g,"\\'") + '\')">' + j.nombre + '</button>'; }).join('') : '<div class="list-group-item py-1 text-muted small">Sin resultados</div>';
+        drop.style.display = 'block';
+    });
+    input.addEventListener('blur', function() { setTimeout(function() { drop.style.display = 'none'; }, 200); });
+    input.addEventListener('focus', function() { if (this.value.trim().length >= 1) this.dispatchEvent(new Event('input')); });
+});
+</script>
+{% endblock %}

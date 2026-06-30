@@ -1,0 +1,242 @@
+{% extends 'gestion/base_dashboard.html' %}
+
+{% block header_title %}Rol de Juegos: {{ temporada.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-0 text-dark" style="letter-spacing: -0.5px;"><i class="bi bi-controller text-warning me-2"></i> Pizarra de Partidos</h3>
+            <p class="text-muted small mb-0 ms-1">{{ temporada.nombre }} - Liga Oficial</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'detalle_temporada' temporada.id %}" class="btn btn-light border fw-bold rounded-pill px-4 shadow-sm text-dark">
+                <i class="bi bi-arrow-left me-2"></i> Panel Torneo
+            </a>
+            <a href="{% url 'descargar_resultados_excel' temporada.id %}" class="btn btn-success fw-bold rounded-pill px-4 shadow-sm">
+                <i class="bi bi-file-earmark-excel-fill me-2"></i> Excel Puntos
+            </a>
+            
+            {% if not temporada.campeon %}
+            <button class="btn btn-dark fw-bold rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNuevoPartido">
+                <i class="bi bi-plus-circle-fill me-2"></i> Nuevo Encuentro
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success fw-bold shadow-sm border-0 alert-dismissible fade show rounded-4">
+                <i class="bi bi-check-circle-fill me-2"></i>{{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if temporada.campeon %}
+    <div class="alert alert-secondary border shadow-sm rounded-4 mb-4 text-center p-4">
+        <h5 class="fw-bold mb-1 text-dark"><i class="bi bi-lock-fill text-secondary me-2"></i> Pizarra Bloqueada (Torneo Finalizado)</h5>
+        <span class="text-muted">El equipo <strong>{{ temporada.campeon.club }}</strong> fue coronado campeón. Los marcadores y estadísticas ya no pueden alterarse.</span>
+    </div>
+    {% endif %}
+
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-5 bg-white">
+        <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-trophy-fill text-warning me-2"></i> Tabla de Posiciones Global</h5>
+        <div class="table-responsive">
+            <table class="table table-borderless align-middle text-center mb-0">
+                <thead class="border-bottom small text-muted">
+                    <tr>
+                        <th class="pb-3">POS</th>
+                        <th class="text-start pb-3">CLUB / ACADEMIA</th>
+                        <th class="pb-3">PJ</th>
+                        <th class="pb-3">G</th>
+                        <th class="pb-3">P</th>
+                        <th class="pb-3 d-none d-md-table-cell">PF</th>
+                        <th class="pb-3 d-none d-md-table-cell">PC</th>
+                        <th class="pb-3">DIF</th>
+                        <th class="pb-3">PTS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fila in tabla_posiciones %}
+                    <tr class="{% if temporada.campeon and temporada.campeon.id == fila.equipo.id %}bg-warning bg-opacity-25{% elif not temporada.campeon and forloop.first %}bg-warning bg-opacity-10{% else %}border-bottom{% endif %}" style="transition: all 0.2s;">
+                        <td class="py-3">
+                            {% if forloop.first %}
+                                <span class="badge bg-warning text-dark fs-6 shadow-sm rounded-circle p-2 px-3"><i class="bi bi-award-fill"></i> 1</span>
+                            {% else %}
+                                <span class="fw-bold text-secondary fs-5">{{ forloop.counter }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-start py-3 fw-bold text-dark fs-6">
+                            {% if temporada.campeon and temporada.campeon.id == fila.equipo.id %}<i class="bi bi-trophy-fill text-warning me-1"></i>{% endif %}
+                            {{ fila.equipo.club }}
+                        </td>
+                        <td class="py-3 fw-bold text-muted">{{ fila.pj }}</td>
+                        <td class="py-3 text-success fw-bold">{{ fila.pg }}</td>
+                        <td class="py-3 text-danger fw-bold">{{ fila.pp }}</td>
+                        <td class="py-3 text-muted small d-none d-md-table-cell">{{ fila.pf }}</td>
+                        <td class="py-3 text-muted small d-none d-md-table-cell">{{ fila.pc }}</td>
+                        <td class="py-3 fw-bold">
+                            {% if fila.dif > 0 %}<span class="text-success">+{{ fila.dif }}</span>
+                            {% elif fila.dif < 0 %}<span class="text-danger">{{ fila.dif }}</span>
+                            {% else %}<span class="text-muted">0</span>{% endif %}
+                        </td>
+                        <td class="py-3 fw-bold fs-4 text-dark">{{ fila.pts }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="9" class="text-muted py-5">No hay estadísticas generadas todavía.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-calendar-event me-2"></i> Rol de Enfrentamientos</h5>
+    <div class="row">
+        {% for partido in partidos %}
+        <div class="col-xl-6 col-lg-12 mb-4">
+            <div class="card border-0 shadow rounded-4 overflow-hidden h-100" style="background: linear-gradient(145deg, #ffffff, #f8f9fa);">
+                
+                <div class="d-flex justify-content-between align-items-center px-4 py-3 border-bottom bg-white">
+                    <span class="badge bg-dark text-white fw-bold px-3 py-2 rounded-pill">{{ partido.jornada }}</span>
+                    <div class="text-end">
+                        <small class="text-muted fw-bold d-block"><i class="bi bi-clock-history me-1"></i> {{ partido.fecha_hora|date:"d M Y, h:i A"|default:"Por definir" }}</small>
+                        <small class="text-danger fw-bold"><i class="bi bi-geo-alt-fill me-1"></i> {{ partido.cancha|default:"Cancha central" }}</small>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div class="text-center" style="width: 35%;">
+                        <div class="bg-light rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 60px; height: 60px;">
+                            <i class="bi bi-shield-fill text-secondary fs-3"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1 text-truncate">{{ partido.equipo_local.club }}</h6>
+                        <span class="badge bg-light text-muted border small">Local</span>
+                    </div>
+
+                    <div class="text-center" style="width: 30%;">
+                        {% if partido.jugado %}
+                            <div class="display-6 fw-bold text-dark mb-1 d-flex justify-content-center align-items-center gap-2">
+                                <span>{{ partido.puntos_local }}</span>
+                                <span class="text-muted fs-4">-</span>
+                                <span>{{ partido.puntos_visitante }}</span>
+                            </div>
+                            <span class="badge bg-success shadow-sm px-3 rounded-pill">Finalizado</span>
+                        {% else %}
+                            <div class="bg-warning text-dark fw-bold rounded-circle mx-auto d-flex align-items-center justify-content-center shadow-sm" style="width: 50px; height: 50px; font-size: 1.2rem;">
+                                VS
+                            </div>
+                            <span class="badge bg-secondary mt-2 px-3 rounded-pill">Pendiente</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="text-center" style="width: 35%;">
+                        <div class="bg-light rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 60px; height: 60px;">
+                            <i class="bi bi-shield-fill text-secondary fs-3"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1 text-truncate">{{ partido.equipo_visitante.club }}</h6>
+                        <span class="badge bg-light text-muted border small">Visitante</span>
+                    </div>
+                </div>
+
+                <div class="px-4 pb-4 pt-0">
+                    {% if not temporada.campeon %}
+                        <button class="btn {% if partido.jugado %}btn-light border text-muted{% else %}btn-primary text-white shadow-sm{% endif %} w-100 fw-bold rounded-pill py-2" data-bs-toggle="modal" data-bs-target="#modalResultado{{ partido.id }}">
+                            <i class="bi {% if partido.jugado %}bi-gear-fill{% else %}bi-pencil-square{% endif %} me-2"></i> 
+                            {% if partido.jugado %}Editar Marcador{% else %}Capturar Resultado{% endif %}
+                        </button>
+                    {% else %}
+                        <button class="btn btn-light border border-secondary text-muted w-100 fw-bold rounded-pill py-2" disabled>
+                            <i class="bi bi-lock-fill me-1"></i> Marcador Sellado
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if not temporada.campeon %}
+        <div class="modal fade" id="modalResultado{{ partido.id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content p-4 border-0 rounded-4 shadow-lg">
+                    <div class="modal-header border-bottom-0 text-center d-block">
+                        <h4 class="fw-bold mb-1">Marcador del Partido</h4>
+                        <p class="text-muted small mb-0">{{ partido.jornada }}</p>
+                    </div>
+                    <div class="modal-body">
+                        <form method="POST">
+                            {% csrf_token %}
+                            <input type="hidden" name="partido_id" value="{{ partido.id }}">
+                            <div class="d-flex justify-content-between align-items-center mb-5 mt-3 gap-3">
+                                <div class="text-center w-50">
+                                    <label class="fw-bold small text-dark mb-3 px-2 text-truncate w-100">{{ partido.equipo_local.club }}</label>
+                                    <input type="number" name="puntos_local" class="form-control form-control-lg text-center fw-bold bg-light border-0" style="font-size: 3rem; height: 80px;" value="{{ partido.puntos_local }}" min="0" required>
+                                </div>
+                                <h2 class="fw-bold text-muted mb-0">-</h2>
+                                <div class="text-center w-50">
+                                    <label class="fw-bold small text-dark mb-3 px-2 text-truncate w-100">{{ partido.equipo_visitante.club }}</label>
+                                    <input type="number" name="puntos_visitante" class="form-control form-control-lg text-center fw-bold bg-light border-0" style="font-size: 3rem; height: 80px;" value="{{ partido.puntos_visitante }}" min="0" required>
+                                </div>
+                            </div>
+                            <div class="form-check form-switch mb-4 d-flex justify-content-center gap-3 bg-light p-3 rounded-4">
+                                <input class="form-check-input ms-0 mt-1" type="checkbox" name="jugado" id="checkJugado{{ partido.id }}" {% if partido.jugado %}checked{% endif %} style="transform: scale(1.5);">
+                                <label class="form-check-label fw-bold text-dark ms-2" for="checkJugado{{ partido.id }}">Dar por Terminado y Contar Puntos</label>
+                            </div>
+                            <button type="submit" name="btn_resultado" class="btn btn-dark w-100 fw-bold rounded-pill fs-5 py-3 shadow">Guardar y Actualizar Tabla</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="bi bi-inboxes text-secondary opacity-50 mb-3 d-block" style="font-size: 5rem;"></i>
+            <h4 class="fw-bold text-dark">La pizarra está limpia</h4>
+            <p class="text-muted">Presiona "Nuevo Encuentro" para programar el primer partido.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% if not temporada.campeon %}
+<div class="modal fade" id="modalNuevoPartido" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content p-4 border-0 rounded-4 shadow-lg">
+            <div class="modal-header border-bottom-0">
+                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-controller me-2 text-warning"></i> Nuevo Encuentro</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                
+                {% if not hay_equipos_validados %}
+                    <div class="alert alert-danger shadow-sm border-0 rounded-3 mb-4 small">
+                        <i class="bi bi-exclamation-octagon-fill fs-5 d-block mb-1"></i>
+                        <strong>¡Atención Administrativa!</strong> <br>
+                        El sistema no detecta equipos habilitados para jugar en este torneo. Los equipos aparecerán en las listas una vez que el módulo de <b>Finanzas</b> apruebe su pago de inscripción.
+                    </div>
+                {% endif %}
+
+                <form method="POST" action="{% url 'gestionar_partidos' temporada.id %}">
+                    {% csrf_token %}
+                    <div class="bg-light p-4 rounded-4 mb-4 border-0 shadow-sm">
+                        <style>
+                            #modalNuevoPartido form input, #modalNuevoPartido form select { 
+                                width: 100%; padding: 0.75rem; border: 1px solid #dee2e6; border-radius: 0.75rem; margin-bottom: 15px; font-weight: 500;
+                            }
+                            #modalNuevoPartido form label { font-size: 0.85rem; font-weight: bold; color: #6c757d; margin-bottom: 5px; display: block; }
+                        </style>
+                        {{ form_partido.as_p }}
+                    </div>
+                    
+                    <button type="submit" name="btn_crear_partido" class="btn btn-dark w-100 fw-bold rounded-pill py-3 fs-6 shadow" {% if not hay_equipos_validados %}disabled{% endif %}>
+                        Confirmar Programación
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

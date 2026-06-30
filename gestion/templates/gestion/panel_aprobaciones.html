@@ -1,0 +1,123 @@
+{% extends 'gestion/base_dashboard.html' %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0 text-dark"><i class="bi bi-shield-lock-fill text-warning me-2"></i> Centro de Aprobaciones</h4>
+            <small class="text-muted">Revisión de expedientes pendientes.</small>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">JUGADOR</th>
+                        <th>DOCUMENTOS</th>
+                        <th class="text-end pe-4">ACCIONES</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for j in jugadores_pendientes %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center">
+                                <div style="width: 50px; height: 50px; min-width: 50px; border-radius: 50%; overflow: hidden;" class="me-3 border shadow-sm">
+                                    <img src="{{ j.foto_perfil.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                </div>
+                                
+                                <div>
+                                    <a href="{% url 'perfil_jugador' j.id %}" class="fw-bold text-dark text-decoration-none fs-6 d-block mb-1">
+                                        {{ j.nombres }} {{ j.apellido_paterno }} <i class="bi bi-box-arrow-up-right text-muted small ms-1" style="font-size: 0.7rem;"></i>
+                                    </a>
+                                    <small class="text-muted fw-bold">Intentos: {{ j.intentos_registro }}/3</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm shadow-sm">
+                                <a href="{{ j.archivo_curp.url }}" target="_blank" class="btn btn-light border fw-bold text-dark">CURP</a>
+                                <a href="{{ j.acta_nacimiento.url }}" target="_blank" class="btn btn-light border fw-bold text-dark">ACTA</a>
+                                {% if j.archivo_pago %}
+                                <a href="{{ j.archivo_pago.url }}" target="_blank" class="btn btn-warning border text-dark fw-bold">PAGO</a>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="pe-4 text-end">
+                            <div class="d-flex justify-content-end gap-2">
+                                
+                                {% if not j.pago_validado %}
+                                    <button class="btn btn-success btn-sm fw-bold px-3 rounded-pill shadow-sm" disabled title="Falta validación de Finanzas">
+                                        Aprobar (Pago Pendiente)
+                                    </button>
+                                {% else %}
+                                    <a href="{% url 'aprobar_jugador' j.pk %}" class="btn btn-success btn-sm fw-bold px-3 rounded-pill shadow-sm" onclick="return confirm('¿Aprobar jugador de manera oficial?');">Aprobar</a>
+                                {% endif %}
+                                
+                                <button class="btn btn-danger btn-sm fw-bold px-3 rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRechazo{{ j.id }}">Rechazar</button>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <div class="modal fade" id="modalRechazo{{ j.id }}" tabindex="-1">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content rounded-4 border-0 shadow-lg">
+                                <form action="{% url 'rechazar_jugador_con_motivo' j.id %}" method="POST">
+                                    {% csrf_token %}
+                                    <div class="modal-header border-0 pb-0">
+                                        <h5 class="fw-bold text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i> Motivo del Rechazo</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p class="small text-muted">Escribe la razón detallada. El tutor recibirá este mensaje para corregir su registro.</p>
+                                        <textarea name="motivo_rechazo" class="form-control rounded-3 bg-light border-0 p-3" rows="4" placeholder="Ej: La CURP es ilegible. El comprobante de pago no corresponde." required></textarea>
+                                    </div>
+                                    <div class="modal-footer border-0 pt-0">
+                                        <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm">Notificar al Tutor</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <tr><td colspan="3" class="text-center py-5 text-muted">No hay jugadores pendientes de revisión.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if jugadores_pendientes.has_other_pages %}
+    <nav aria-label="Navegación de aprobaciones" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if jugadores_pendientes.has_previous %}
+                <li class="page-item">
+                    <a class="page-link shadow-sm" href="?page={{ jugadores_pendientes.previous_page_number }}">Anterior</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+            {% endif %}
+            {% for i in jugadores_pendientes.paginator.page_range %}
+                {% if jugadores_pendientes.number == i %}
+                    <li class="page-item active"><span class="page-link shadow-sm">{{ i }}</span></li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link shadow-sm" href="?page={{ i }}">{{ i }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            {% if jugadores_pendientes.has_next %}
+                <li class="page-item">
+                    <a class="page-link shadow-sm" href="?page={{ jugadores_pendientes.next_page_number }}">Siguiente</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

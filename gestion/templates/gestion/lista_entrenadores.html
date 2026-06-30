@@ -1,0 +1,206 @@
+{% extends 'gestion/base_dashboard.html' %}
+
+{% block header_title %}Directorio de Entrenadores{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h3 class="fw-bold mb-1 text-dark" style="letter-spacing: -0.5px;"><i class="bi bi-people-fill text-primary me-2"></i> Cuentas de Staff</h3>
+            <p class="text-muted small mb-0 fw-bold ms-1">Gestiona los accesos de los directores técnicos.</p>
+        </div>
+        <button class="btn btn-dark fw-bold rounded-pill px-4 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNuevoEntrenador">
+            <i class="bi bi-person-plus-fill me-2"></i> Crear Cuenta
+        </button>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'info' %}warning{% else %}success{% endif %} fw-bold shadow-sm border-0 alert-dismissible fade show rounded-4">
+                <i class="bi bi-info-circle-fill me-2"></i>{{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-0 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light small text-muted border-bottom">
+                    <tr>
+                        <th class="py-3 ps-4">ESTATUS</th>
+                        <th class="py-3">NOMBRE COMPLETO</th>
+                        <th class="py-3">USUARIO (LOGIN)</th>
+                        <th class="py-3">CORREO / CONTACTO</th>
+                        <th class="py-3">CLUB ASIGNADO</th>
+                        <th class="py-3 text-end pe-4">GESTIÓN DE ACCESO</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entrenador in entrenadores %}
+                    <tr class="border-bottom {% if not entrenador.is_active %}bg-light opacity-75{% endif %}">
+                        <td class="ps-4">
+                            {% if entrenador.is_active %}
+                                <span class="badge bg-success shadow-sm rounded-pill"><i class="bi bi-check-circle-fill me-1"></i>Activo</span>
+                            {% else %}
+                                <span class="badge bg-danger shadow-sm rounded-pill"><i class="bi bi-lock-fill me-1"></i>Suspendido</span>
+                            {% endif %}
+                        </td>
+                        <td class="fw-bold text-dark">
+                            {% if entrenador.get_full_name %}
+                                {{ entrenador.get_full_name }}
+                            {% else %}
+                                <span class="text-danger small"><i class="bi bi-exclamation-triangle-fill me-1"></i>Faltan datos</span>
+                            {% endif %}
+                        </td>
+                        <td class="fw-bold text-primary">{{ entrenador.username }}</td>
+                        <td>
+                            <span class="text-muted small">{{ entrenador.email|default:"No registrado" }}</span>
+                        </td>
+                        <td>
+                            {% if entrenador.equipo_entrenado %}
+                                <span class="badge bg-dark rounded-pill">{{ entrenador.equipo_entrenado.club }}</span>
+                            {% else %}
+                                <span class="badge bg-light border text-muted rounded-pill">Sin club</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-light border fw-bold rounded-pill shadow-sm dropdown-toggle px-3" type="button" data-bs-toggle="dropdown">
+                                    Opciones
+                                </button>
+                                <ul class="dropdown-menu shadow border-0 rounded-4">
+                                    <li><a class="dropdown-item fw-bold text-dark" href="#" data-bs-toggle="modal" data-bs-target="#modalEditar{{ entrenador.id }}"><i class="bi bi-pencil-square text-primary me-2"></i>Editar Datos</a></li>
+                                    <li><a class="dropdown-item fw-bold text-dark" href="#" data-bs-toggle="modal" data-bs-target="#modalPassword{{ entrenador.id }}"><i class="bi bi-key-fill text-warning me-2"></i>Reset Clave</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form action="{% url 'toggle_acceso_entrenador' entrenador.id %}" method="POST" class="m-0 p-0">
+                                            {% csrf_token %}
+                                            <button type="submit" class="dropdown-item fw-bold {% if entrenador.is_active %}text-danger{% else %}text-success{% endif %}" onclick="return confirm('¿Confirmas cambiar el estado de acceso de este usuario?');">
+                                                {% if entrenador.is_active %}
+                                                    <i class="bi bi-person-x-fill me-2"></i>Suspender Acceso
+                                                {% else %}
+                                                    <i class="bi bi-person-check-fill me-2"></i>Reactivar Acceso
+                                                {% endif %}
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Modal Editar Datos Personales -->
+                    <div class="modal fade" id="modalEditar{{ entrenador.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content p-4 border-0 rounded-4 shadow-lg">
+                                <div class="modal-header border-bottom-0">
+                                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-pencil-square me-2 text-primary"></i> Completar Perfil</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form action="{% url 'editar_cuenta_entrenador' entrenador.id %}" method="POST">
+                                        {% csrf_token %}
+                                        <div class="mb-3">
+                                            <label class="fw-bold small text-muted mb-1">Nombre(s)</label>
+                                            <input type="text" name="first_name" class="form-control rounded-3" value="{{ entrenador.first_name }}">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="fw-bold small text-muted mb-1">Apellidos</label>
+                                            <input type="text" name="last_name" class="form-control rounded-3" value="{{ entrenador.last_name }}">
+                                        </div>
+                                        <div class="mb-4">
+                                            <label class="fw-bold small text-muted mb-1">Correo Electrónico</label>
+                                            <input type="email" name="email" class="form-control rounded-3" value="{{ entrenador.email }}">
+                                        </div>
+                                        <button type="submit" class="btn btn-primary w-100 fw-bold rounded-pill">Guardar Cambios</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Reset Password -->
+                    <div class="modal fade" id="modalPassword{{ entrenador.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content p-4 border-0 rounded-4 shadow-lg">
+                                <div class="modal-header border-bottom-0">
+                                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-key-fill me-2 text-warning"></i> Nueva Contraseña</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form action="{% url 'resetear_password' entrenador.id %}" method="POST">
+                                        {% csrf_token %}
+                                        <p class="text-muted small">Cambiar la clave de acceso de <strong>{{ entrenador.username }}</strong>.</p>
+                                        <div class="mb-4">
+                                            <input type="text" name="nueva_password" class="form-control form-control-lg fw-bold rounded-3 bg-light border-0 text-center" required minlength="6" placeholder="Escribe la clave">
+                                        </div>
+                                        <button type="submit" class="btn btn-dark w-100 fw-bold rounded-pill">Forzar Actualización</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-5">No hay cuentas de entrenadores registradas.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if entrenadores.has_other_pages %}
+    <nav aria-label="Navegación de entrenadores" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if entrenadores.has_previous %}
+                <li class="page-item">
+                    <a class="page-link shadow-sm" href="?page={{ entrenadores.previous_page_number }}">Anterior</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+            {% endif %}
+            {% for i in entrenadores.paginator.page_range %}
+                {% if entrenadores.number == i %}
+                    <li class="page-item active"><span class="page-link shadow-sm">{{ i }}</span></li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link shadow-sm" href="?page={{ i }}">{{ i }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            {% if entrenadores.has_next %}
+                <li class="page-item">
+                    <a class="page-link shadow-sm" href="?page={{ entrenadores.next_page_number }}">Siguiente</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- Modal Crear Entrenador (Se mantiene igual) -->
+<div class="modal fade" id="modalNuevoEntrenador" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content p-4 border-0 rounded-4 shadow-lg">
+            <div class="modal-header border-bottom-0">
+                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-person-plus-fill me-2 text-dark"></i> Nueva Cuenta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="bg-light p-3 rounded-4 mb-4 border">
+                        <style>#modalNuevoEntrenador form input { width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 0.5rem; margin-bottom: 10px;}</style>
+                        {{ form_entrenador.as_p }}
+                    </div>
+                    <button type="submit" name="btn_crear_entrenador" class="btn btn-dark w-100 fw-bold rounded-pill shadow-sm">Crear Accesos</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

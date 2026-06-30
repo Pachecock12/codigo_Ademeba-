@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Tutor | ADEMEBA OAXACA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; background-color: #000; color: #fff; }
+        
+        .hero-section {
+            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1519861531153-f75d73c3ef4e?q=80&w=2066&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            padding: 6rem 0;
+            text-align: center;
+        }
+
+        .text-gold { color: #dca311; }
+        .bg-gold { background-color: #dca311; }
+
+        .card-step {
+            background: #161a1d;
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            height: 100%;
+            transition: all 0.3s;
+        }
+
+        .card-step:hover {
+            transform: translateY(-10px);
+            border-color: #dca311;
+        }
+
+        .step-number {
+            width: 40px; height: 40px;
+            background: #dca311;
+            color: #000;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+        }
+
+        .register-container {
+            max-width: 600px;
+            margin: -100px auto 100px auto;
+            background: #111;
+            border-radius: 30px;
+            padding: 3.5rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+            position: relative;
+            z-index: 10;
+        }
+
+        .form-control, .form-control-plaintext {
+            background: #1a1f22;
+            border: 1px solid #2d3436;
+            color: #fff;
+            padding: 0.8rem 1.2rem;
+            border-radius: 12px;
+            margin-bottom: 0.25rem;
+        }
+
+        .form-control:focus {
+            background: #202629;
+            border-color: #dca311;
+            color: #fff;
+            box-shadow: none;
+        }
+
+        .form-control.is-invalid {
+            border-color: #dc3545;
+            background: #2a1a1d;
+        }
+
+        .invalid-feedback {
+            color: #ff6b6b;
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .help-text {
+            color: #6c757d;
+            font-size: 0.75rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .btn-elite {
+            background: #dca311;
+            color: #000;
+            font-weight: 800;
+            padding: 1.2rem;
+            border-radius: 15px;
+            width: 100%;
+            border: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 2rem;
+        }
+
+        .btn-elite:hover { background: #f0b418; color: #000; }
+
+        .sponsors-bar {
+            background: #0a0a0a;
+            padding: 3rem 0;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .sponsor-logo {
+            filter: grayscale(1) invert(1) brightness(0.7);
+            max-width: 120px;
+            opacity: 0.5;
+            transition: all 0.3s;
+        }
+
+        .sponsor-logo:hover { filter: none; opacity: 1; }
+
+        form label { font-size: 0.8rem; font-weight: 700; color: #8f959e; margin-bottom: 0.5rem; display: block; }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-wrapper input {
+            padding-right: 3rem;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 1rem;
+            top: 0.8rem;
+            background: none;
+            border: none;
+            color: #8f959e;
+            cursor: pointer;
+            padding: 0;
+            font-size: 1.2rem;
+        }
+
+        .toggle-password:hover { color: #dca311; }
+
+        .alert-custom {
+            background: #2a1a1d;
+            border: 1px solid #dc3545;
+            color: #ff6b6b;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <section class="hero-section">
+        <div class="container">
+            <span class="badge bg-gold text-dark px-3 py-2 rounded-pill fw-bold mb-3">TEMPORADA OFICIAL</span>
+            <h1 class="display-3 fw-900 mb-3">EL BÁSQUETBOL OAXAQUEÑO<br><span class="text-gold">TE ESTÁ ESPERANDO.</span></h1>
+            <p class="lead text-white-50 mb-5">Únete a la plataforma oficial de registro y lleva tu pasión a la duela.</p>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="register-container">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">Registro de Tutores</h2>
+                <p class="text-white-50">Crea tu cuenta de familia para comenzar a inscribir a tus jugadores.</p>
+            </div>
+
+            {% if form.non_field_errors %}
+            <div class="alert-custom">
+                {% for error in form.non_field_errors %}
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <label for="{{ form.username.id_for_label }}">Nombre de Usuario</label>
+                <input type="text" name="username" id="{{ form.username.id_for_label }}"
+                       class="form-control{% if form.username.errors %} is-invalid{% endif %}"
+                       placeholder="Elige un nombre de usuario"
+                       value="{{ form.username.value|default:'' }}" maxlength="20" required>
+                {% if form.username.errors %}
+                    {% for error in form.username.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+                <span class="help-text">Máximo 20 caracteres. Solo letras y números.</span>
+
+                <label for="{{ form.first_name.id_for_label }}">Nombre(s)</label>
+                <input type="text" name="first_name" id="{{ form.first_name.id_for_label }}"
+                       class="form-control{% if form.first_name.errors %} is-invalid{% endif %}"
+                       placeholder="Tu nombre(s)"
+                       value="{{ form.first_name.value|default:'' }}" maxlength="30" required>
+                {% if form.first_name.errors %}
+                    {% for error in form.first_name.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+                <span class="help-text">Solo letras, máximo 30 caracteres.</span>
+
+                <label for="{{ form.last_name.id_for_label }}">Apellidos</label>
+                <input type="text" name="last_name" id="{{ form.last_name.id_for_label }}"
+                       class="form-control{% if form.last_name.errors %} is-invalid{% endif %}"
+                       placeholder="Tus apellidos"
+                       value="{{ form.last_name.value|default:'' }}" maxlength="30" required>
+                {% if form.last_name.errors %}
+                    {% for error in form.last_name.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+                <span class="help-text">Solo letras, máximo 30 caracteres.</span>
+
+                <label for="{{ form.email.id_for_label }}">Correo Electrónico</label>
+                <input type="email" name="email" id="{{ form.email.id_for_label }}"
+                       class="form-control{% if form.email.errors %} is-invalid{% endif %}"
+                       placeholder="correo@ejemplo.com"
+                       value="{{ form.email.value|default:'' }}" required>
+                {% if form.email.errors %}
+                    {% for error in form.email.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+                <span class="help-text">Recibirás notificaciones en este correo. No debe estar duplicado.</span>
+
+                <label for="{{ form.password1.id_for_label }}">Contraseña</label>
+                <div class="password-wrapper">
+                    <input type="password" name="password1" id="{{ form.password1.id_for_label }}"
+                           class="form-control{% if form.password1.errors %} is-invalid{% endif %}"
+                           placeholder="••••••••" required>
+                    <button type="button" class="toggle-password" onclick="togglePassword('{{ form.password1.id_for_label }}', this)">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+                {% if form.password1.errors %}
+                    {% for error in form.password1.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+                <span class="help-text">Mínimo 8 caracteres. Al menos una mayúscula y un número.</span>
+
+                <label for="{{ form.password2.id_for_label }}">Confirmar Contraseña</label>
+                <div class="password-wrapper">
+                    <input type="password" name="password2" id="{{ form.password2.id_for_label }}"
+                           class="form-control{% if form.password2.errors %} is-invalid{% endif %}"
+                           placeholder="Repite la contraseña" required>
+                    <button type="button" class="toggle-password" onclick="togglePassword('{{ form.password2.id_for_label }}', this)">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+                {% if form.password2.errors %}
+                    {% for error in form.password2.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="form-check mt-4">
+                    <input class="form-check-input" type="checkbox" required id="privacy">
+                    <label class="form-check-label text-white-50 small" for="privacy">
+                        Acepto los términos de privacidad y el reglamento de competencia de ADEMEBA Oaxaca.
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-elite">Crear Cuenta</button>
+            </form>
+
+            <div class="text-center mt-4">
+                <p class="text-white-50 small">¿Ya tienes cuenta? <a href="{% url 'login' %}" class="text-gold fw-bold text-decoration-none">Inicia sesión aquí</a></p>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-5 pb-5">
+            <div class="col-md-3">
+                <div class="card-step">
+                    <div class="step-number">1</div>
+                    <h5 class="fw-bold">Tu Cuenta</h5>
+                    <p class="text-white-50 small">Genera tu perfil de padre o tutor con tus datos de contacto básicos.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card-step">
+                    <div class="step-number">2</div>
+                    <h5 class="fw-bold">Sube los Docs</h5>
+                    <p class="text-white-50 small">Registra a tus jugadores subiendo su CURP, acta de nacimiento y fotos.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card-step">
+                    <div class="step-number">3</div>
+                    <h5 class="fw-bold">Validación</h5>
+                    <p class="text-white-50 small">La mesa directiva revisará que los documentos cumplan las normas.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card-step">
+                    <div class="step-number">4</div>
+                    <h5 class="fw-bold">Fichaje</h5>
+                    <p class="text-white-50 small">Proporciona la CURP al entrenador de tu club para que los una a la plantilla.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sponsors-bar text-center">
+        <div class="container">
+            <p class="text-white-50 small fw-bold mb-4">ALIADOS ESTRATÉGICOS</p>
+            <div class="d-flex flex-wrap justify-content-center align-items-center gap-5">
+                <img src="https://logodownload.org/wp-content/uploads/2016/11/nba-logo-0.png" class="sponsor-logo" alt="NBA">
+                <img src="https://upload.wikimedia.org/wikipedia/en/thumb/0/02/FIBA_logo.svg/1200px-FIBA_logo.svg.png" class="sponsor-logo" alt="FIBA">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Nike_logo.svg/1280px-Nike_logo.svg.png" class="sponsor-logo" alt="Nike">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Adidas_Logo.svg/1200px-Adidas_Logo.svg.png" class="sponsor-logo" alt="Adidas">
+            </div>
+        </div>
+    </div>
+
+    <footer class="py-4 text-center border-top border-secondary border-opacity-10 mt-5">
+        <p class="text-white-50 small mb-0">© 2026 ADEMEBA OAXACA. Todos los derechos reservados.</p>
+    </footer>
+
+    <script>
+        function togglePassword(inputId, button) {
+            const input = document.getElementById(inputId);
+            const icon = button.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        }
+    </script>
+
+</body>
+</html>

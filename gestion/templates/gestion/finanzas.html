@@ -1,0 +1,160 @@
+{% extends 'gestion/base_dashboard.html' %}
+
+{% block header_title %}Control de Tesorería{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0">Gestión de Adeudos</h4>
+            <p class="text-muted small mb-0">Registra y controla los pagos de inscripciones o multas de los equipos.</p>
+        </div>
+        <button class="btn btn-dark fw-bold px-4 rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCrearAdeudo">
+            <i class="bi bi-plus-circle-fill me-2"></i> Generar Nuevo Cargo
+        </button>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success fw-bold shadow-sm border-0">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row g-4">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 border-top border-danger border-4">
+                <h5 class="fw-bold text-danger mb-4">
+                    <i class="bi bi-exclamation-octagon-fill me-2"></i> Cobros Pendientes y En Revisión
+                </h5>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead class="table-light text-muted small">
+                            <tr>
+                                <th>ASIGNADO A</th>
+                                <th>CONCEPTO</th>
+                                <th>MONTO</th>
+                                <th class="text-center">ESTATUS</th>
+                                <th class="text-end">ACCIÓN</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for a in adeudos_pendientes %}
+                            <tr>
+                                <td class="fw-bold">
+                                    {% if a.equipo %}
+                                        <i class="bi bi-shield-fill text-primary me-1"></i> {{ a.equipo.club }}
+                                    {% elif a.jugador %}
+                                        <i class="bi bi-person-fill text-info me-1"></i> {{ a.jugador.nombres }}
+                                    {% else %}
+                                        <span class="text-muted">General</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {{ a.concepto }}<br>
+                                    <small class="text-muted">{{ a.fecha_creacion|date:"d/m/Y" }}</small>
+                                </td>
+                                <td class="fw-bold text-danger">${{ a.monto }}</td>
+                                <td class="text-center">
+                                    {% if a.estado == 'REVISION' %}
+                                        <span class="badge bg-warning text-dark rounded-pill"><i class="bi bi-eye-fill me-1"></i> En Revisión</span>
+                                    {% else %}
+                                        <span class="badge bg-danger rounded-pill"><i class="bi bi-clock me-1"></i> Pendiente</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-2">
+                                        {% if a.estado == 'REVISION' and a.voucher_comprobante %}
+                                            <a href="{{ a.voucher_comprobante.url }}" target="_blank" class="btn btn-sm btn-outline-dark rounded-pill" title="Ver Voucher">
+                                                <i class="bi bi-receipt"></i>
+                                            </a>
+                                            <a href="{% url 'aprobar_voucher' a.id %}" class="btn btn-sm btn-success rounded-pill fw-bold" onclick="return confirm('¿Aprobar este voucher y marcar como PAGADO?');">
+                                                <i class="bi bi-check-lg"></i> Aprobar
+                                            </a>
+                                            <a href="{% url 'rechazar_voucher' a.id %}" class="btn btn-sm btn-warning rounded-pill fw-bold" onclick="return confirm('¿Rechazar este voucher? El adeudo volverá a pendiente.');">
+                                                <i class="bi bi-x-lg"></i> Rechazar
+                                            </a>
+                                        {% elif a.estado == 'PENDIENTE' %}
+                                            <a href="{% url 'cobrar_efectivo' a.id %}" class="btn btn-sm btn-success rounded-pill fw-bold" title="Cobrar en Efectivo" onclick="return confirm('¿Confirmas el pago en efectivo?');">
+                                                <i class="bi bi-cash"></i> Cobrar
+                                            </a>
+                                        {% endif %}
+                                        <a href="{% url 'eliminar_adeudo' a.id %}" class="btn btn-sm btn-outline-danger rounded-pill" title="Anular Cargo" onclick="return confirm('¿Seguro que deseas anular este cargo?');">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-4">Todos los equipos están al corriente.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100 border-top border-success border-4">
+                <h5 class="fw-bold text-success mb-4">
+                    <i class="bi bi-check-circle-fill me-2"></i> Recién Liquidados
+                </h5>
+                <ul class="list-group list-group-flush">
+                    {% for p in adeudos_pagados %}
+                    <li class="list-group-item px-0 py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="fw-bold mb-0">
+                                    {% if p.equipo %}{{ p.equipo.club }}{% else %}{{ p.jugador.nombres|default:"General" }}{% endif %}
+                                </h6>
+                                <small class="text-muted d-block text-truncate" style="max-width: 150px;">{{ p.concepto }}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-success rounded-pill">+ ${{ p.monto }}</span><br>
+                                <small class="text-muted" style="font-size: 0.65rem;">{{ p.fecha_pago|date:"d/m/Y" }}</small>
+                            </div>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <li class="list-group-item border-0 text-center text-muted py-3">
+                        No hay historial de pagos recientes.
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalCrearAdeudo" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content p-4 border-0 rounded-4 shadow-lg">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="fw-bold mb-0">Cargar Adeudo a Equipo / Jugador</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" action="{% url 'panel_finanzas' %}">
+                        {% csrf_token %}
+                        <style>
+                            .modal-body form p { margin-bottom: 1.2rem; }
+                            .modal-body form input, .modal-body form select { 
+                                width: 100%; 
+                                padding: 0.5rem 0.75rem; 
+                                border: 1px solid #ced4da; 
+                                border-radius: 0.5rem; 
+                            }
+                        </style>
+                        <div class="bg-light p-3 rounded-3 mb-3 border">
+                            {{ form_adeudo.as_p }}
+                        </div>
+                        <button type="submit" name="btn_crear_adeudo" class="btn btn-dark w-100 fw-bold mt-2 py-2 rounded-pill shadow-sm">
+                            Generar Cargo
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

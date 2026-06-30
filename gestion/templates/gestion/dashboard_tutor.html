@@ -1,0 +1,246 @@
+{% extends 'gestion/base_dashboard.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    
+    <div class="card border-0 shadow-sm rounded-4 bg-white mb-5 overflow-hidden">
+        <div class="row g-0">
+            <div class="col-md-8 p-4 p-md-5 d-flex flex-column justify-content-center border-start border-5 border-primary position-relative">
+                <div class="position-absolute top-0 end-0 p-4 opacity-10">
+                    <i class="bi bi-people-fill" style="font-size: 8rem;"></i>
+                </div>
+                <div class="position-relative z-1">
+                    <p class="text-primary small fw-bold mb-1 text-uppercase tracking-wide">Área Familiar</p>
+                    <h2 class="fw-bold text-dark mb-2 display-6">Portal del Tutor</h2>
+                    <p class="text-secondary mb-0 fs-5">Gestiona la documentación, estatus y equipos de tus hijos.</p>
+                </div>
+            </div>
+            <div class="col-md-4 p-4 p-md-5 bg-light d-flex align-items-center justify-content-center border-start">
+                <a href="{% url 'equipos_tutor' %}" class="btn btn-primary bg-gradient fw-bold px-4 py-3 rounded-pill shadow w-100 hover-lift fs-5">
+                    <i class="bi bi-person-plus-fill me-2"></i> Registrar Jugador
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if mis_adeudos %}
+    <div class="card bg-danger bg-opacity-10 border-0 shadow-sm rounded-4 mb-5">
+        <div class="card-body p-4 p-md-5">
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-danger text-white rounded-circle d-flex justify-content-center align-items-center me-3 shadow-sm" style="width: 50px; height: 50px;">
+                    <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+                </div>
+                <h4 class="fw-bold mb-0 text-danger">Estado de Cuenta Pendiente</h4>
+            </div>
+            <div class="table-responsive bg-white rounded-4 shadow-sm">
+                <table class="table table-borderless align-middle mb-0">
+                    <tbody>
+                        {% for adeudo in mis_adeudos %}
+                        <tr class="border-bottom border-light">
+                            <td class="fw-bold py-4 px-4 text-dark fs-5">
+                                {{ adeudo.concepto }} 
+                                <br><span class="badge bg-light text-secondary border mt-2"><i class="bi bi-shield-fill me-1"></i> {{ adeudo.equipo.club|default:"Sin Club" }}</span>
+                            </td>
+                            <td class="fs-3 fw-bold text-danger py-4 text-end px-4">${{ adeudo.monto }}</td>
+                            
+                            <td class="py-4 px-4 text-end" style="width: 300px;">
+                                {% if adeudo.estado == 'REVISION' %}
+                                    <span class="badge bg-warning text-dark p-3 rounded-pill w-100 shadow-sm fs-6"><i class="bi bi-clock-history me-2"></i> Comprobante en Revisión</span>
+                                {% else %}
+                                    <a href="{% url 'subir_voucher_adeudo' adeudo.id %}" class="btn btn-danger bg-gradient rounded-pill fw-bold w-100 py-3 shadow-sm hover-lift">
+                                        <i class="bi bi-upload me-2"></i> Subir Comprobante
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if config and config.banco and mis_adeudos %}
+    <div class="alert alert-info border-0 rounded-4 shadow-sm mb-4">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-bank fs-2 me-3 text-primary"></i>
+            <div>
+                <span class="fw-bold d-block">Datos bancarios para realizar tu pago</span>
+                <span class="small">Banco: <strong>{{ config.banco }}</strong> | Cuenta: <strong>{{ config.numero_cuenta }}</strong> | Titular: <strong>{{ config.nombre_cuenta }}</strong></span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    <h4 class="fw-bold text-dark mb-4"><i class="bi bi-person-vcard text-primary me-2"></i> Mis Jugadores Registrados</h4>
+    
+    <div class="row g-4 mb-5">
+        {% for j in mis_hijos %}
+            {% with ultima_sol=j.solicitudes_cambio.last %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 h-100 bg-white hover-lift {% if not j.activo %}opacity-75{% endif %}">
+                    
+                    <div class="p-3 text-center position-relative rounded-top-4 bg-{{ j.semaforo.color }} bg-gradient" style="height: 100px;">
+                        
+                        <span class="badge bg-white text-{{ j.semaforo.color }} shadow-sm rounded-pill px-3 py-2 position-absolute top-0 end-0 m-3 fw-bold">
+                            <i class="bi {{ j.semaforo.icono }} me-1"></i> {{ j.semaforo.estatus }}
+                        </span>
+                        
+                        {% if ultima_sol and ultima_sol.estado == 'PENDIENTE' %}
+                            <span class="badge bg-dark text-white shadow-sm rounded-pill px-3 py-2 position-absolute top-0 start-0 m-3"><i class="bi bi-arrow-left-right me-1"></i> Traspaso</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="text-center position-relative" style="margin-top: -50px; z-index: 2;">
+                        {% if j.foto_perfil %}
+                            <img src="{{ j.foto_perfil.url }}" class="rounded-circle border border-5 border-white shadow bg-white object-fit-cover" style="width: 100px; height: 100px;">
+                        {% else %}
+                            <div class="bg-secondary text-white rounded-circle d-inline-flex align-items-center justify-content-center border border-5 border-white shadow bg-white" style="width: 100px; height: 100px; font-size: 2.5rem;">
+                                {{ j.nombres|first }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="card-body p-4 text-center d-flex flex-column">
+                        <h4 class="fw-bold text-dark mb-1">{{ j.nombres }}</h4>
+                        <h6 class="text-secondary mb-3">{{ j.apellido_paterno }}</h6>
+                        
+                        {% if j.semaforo.mensaje %}
+                            <div class="alert alert-{{ j.semaforo.color }} bg-{{ j.semaforo.color }} bg-opacity-10 p-3 rounded-4 mb-3 border-0 small shadow-sm text-start">
+                                <h6 class="fw-bold text-{{ j.semaforo.color }} mb-1"><i class="bi {{ j.semaforo.icono }} me-1"></i>
+                                    {% if j.estado_validacion == 'RECHAZADO' %}DOCUMENTOS RECHAZADOS{% else %}ATENCIÓN:{% endif %}
+                                </h6>
+                                <span class="text-dark">{{ j.semaforo.mensaje }}</span>
+                            </div>
+                        {% endif %}
+
+                        <div class="bg-light rounded-4 p-3 mb-3 border shadow-sm mx-2">
+                            <small class="text-muted fw-bold d-block mb-2 text-uppercase tracking-wide" style="font-size: 0.7rem;">Ligas / Torneos Activos</small>
+                            {% for liga in j.ligas_actuales %}
+                                <span class="badge bg-dark bg-opacity-10 text-dark border mb-1 d-block fw-bold py-1">{{ liga }}</span>
+                            {% empty %}
+                                <span class="text-muted small"><i class="bi bi-calendar-x me-1"></i> Sin torneo activo</span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="text-center mt-auto pt-3 border-top mb-4">
+                            <small class="d-block text-muted fw-bold mb-2 text-uppercase tracking-wide" style="font-size: 0.75rem;">CLUB ACTUAL</small>
+                            <span class="fw-bold text-primary px-3 py-2 bg-primary bg-opacity-10 rounded-pill fs-6"><i class="bi bi-shield-fill me-1"></i> {{ j.equipo.club|default:"Sin Club Asignado" }}</span>
+                        </div>
+
+                        <div class="d-flex flex-column gap-2 mt-auto">
+                            <a href="{% url 'perfil_jugador' j.id %}" class="btn btn-dark fw-bold rounded-pill shadow-sm py-2">
+                                <i class="bi bi-person-lines-fill me-1"></i> Ver Perfil
+                            </a>
+
+                            {% if j.activo %}
+                                {% if j.estado_validacion != 'APROBADO' %}
+                                    {% if j.intentos_registro < 3 %}
+                                        <a href="{% url 'editar_jugador_tutor' j.pk %}" class="btn btn-warning bg-gradient fw-bold rounded-pill shadow-sm py-2 text-dark">
+                                            <i class="bi bi-pencil-square me-1"></i> Corregir Datos
+                                        </a>
+                                    {% endif %}
+                                {% else %}
+                                    <div class="d-flex gap-2">
+                                        <a href="{% url 'credencial_jugador_pdf' j.id %}" target="_blank" class="btn btn-outline-primary fw-bold rounded-pill shadow-sm py-2 w-50">
+                                            <i class="bi bi-person-vcard-fill me-1"></i> Credencial
+                                        </a>
+                                        <a href="{% url 'solicitar_cambio_equipo' j.id %}" class="btn btn-outline-warning fw-bold rounded-pill shadow-sm py-2 w-50 text-dark border-warning">
+                                            <i class="bi bi-arrow-left-right me-1"></i> Traspaso
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endwith %}
+        {% empty %}
+            <div class="col-12 text-center py-5">
+                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 120px; height: 120px;">
+                    <i class="bi bi-person-x text-secondary" style="font-size: 4rem;"></i>
+                </div>
+                <h3 class="fw-bold text-dark">No tienes jugadores registrados</h3>
+                <p class="text-muted fs-5">Haz clic en el botón superior para registrar a tu hijo en un club oficial.</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    {% if multas_totales > 0 %}
+    <div class="card bg-danger bg-opacity-10 border-0 shadow-sm rounded-4 mb-5">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 class="fw-bold text-danger mb-0"><i class="bi bi-cash-stack me-2"></i> Multas Pendientes de Pago</h5>
+                <span class="badge bg-danger rounded-pill px-3 py-2 fs-6">${{ multas_totales }}</span>
+            </div>
+            <div class="table-responsive bg-white rounded-4 shadow-sm">
+                <table class="table table-borderless align-middle mb-0">
+                    <tbody>
+                        {% for m in multas_lista %}
+                        <tr class="border-bottom border-light">
+                            <td class="py-3 px-4">
+                                <span class="fw-bold d-block">{{ m.jugador.nombres }} {{ m.jugador.apellido_paterno }}</span>
+                                <small class="text-muted">{{ m.sancion.motivo|truncatechars:60 }}</small>
+                            </td>
+                            <td class="fw-bold text-danger fs-5 py-3 text-end px-4">${{ m.monto }}</td>
+                            <td class="py-3 px-4 text-end">
+                                <a href="{% url 'pagar_multa' m.sancion.id %}" class="btn btn-danger bg-gradient rounded-pill fw-bold px-4 shadow-sm">
+                                    <i class="bi bi-upload me-1"></i> Pagar
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="mt-5">
+        <div class="d-flex align-items-center mb-4">
+            <h4 class="fw-bold text-dark mb-0"><i class="bi bi-calendar-week-fill text-primary me-2"></i> Calendario de Partidos</h4>
+            <span class="badge bg-primary bg-opacity-10 text-primary ms-3 rounded-pill px-3 py-2 border border-primary">Equipos de tus hijos</span>
+        </div>
+        
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 p-md-5">
+            {% if partidos_hijos %}
+                <div class="row g-4">
+                {% for partido in partidos_hijos %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="border rounded-4 p-4 position-relative bg-light shadow-sm hover-lift h-100 d-flex flex-column justify-content-between">
+                            <div class="text-center mb-3">
+                                <span class="badge bg-dark rounded-pill px-3 py-2 shadow-sm fs-6">
+                                    <i class="bi bi-clock me-1"></i> {{ partido.fecha_hora|date:"d M Y - H:i" }} hrs
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center bg-white rounded-3 p-3 border shadow-sm my-2">
+                                <div class="text-center" style="width: 42%;">
+                                    <span class="fw-bold d-block text-truncate text-dark">{{ partido.equipo_local.club }}</span>
+                                </div>
+                                <div class="text-muted small fw-bold bg-light rounded-circle p-2 border">VS</div>
+                                <div class="text-center" style="width: 42%;">
+                                    <span class="fw-bold d-block text-truncate text-dark">{{ partido.equipo_visitante.club }}</span>
+                                </div>
+                            </div>
+                            <div class="text-center mt-3 text-muted small fw-bold">
+                                <i class="bi bi-geo-alt-fill text-danger"></i> {{ partido.cancha|default:"Cancha por definir" }}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-calendar-x text-muted opacity-50 mb-3" style="font-size: 4rem;"></i>
+                    <h5 class="fw-bold text-dark">Sin encuentros próximos</h5>
+                    <p class="mb-0 text-muted">No hay partidos programados por ahora para los equipos de tus hijos.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

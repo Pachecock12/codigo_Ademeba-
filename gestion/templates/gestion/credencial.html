@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credencial Oficial - {{ jugador.nombres }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    {% load static %}
+    <style>
+        body {
+            background: #1a1a1c;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .cred-card {
+            width: 380px;
+            background: #fff;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+            position: relative;
+        }
+
+        /* ===== TOP BAR WITH COLORED ACCENTS ===== */
+        .cred-top {
+            height: 6px;
+            display: flex;
+        }
+        .cred-top .bar-red {
+            flex: 1;
+            background: #C71E28;
+        }
+        .cred-top .bar-green {
+            flex: 1;
+            background: #2d7d3a;
+        }
+        .cred-top .bar-red2 {
+            flex: 1;
+            background: #C71E28;
+        }
+
+        /* ===== HEADER ===== */
+        .cred-header {
+            background: #fff;
+            padding: 14px 20px 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid #eef0f2;
+        }
+        .cred-header .h-logo {
+            flex: 0 0 auto;
+        }
+        .cred-header .h-logo img {
+            height: 30px;
+            width: auto;
+            display: block;
+        }
+        .cred-header .h-title {
+            flex: 1;
+            text-align: center;
+        }
+        .cred-header .h-title .h-main {
+            font-weight: 900;
+            font-size: 0.8rem;
+            color: #1a1a1c;
+            letter-spacing: 0.8px;
+            line-height: 1.2;
+            margin: 0;
+        }
+        .cred-header .h-title .h-sub {
+            font-size: 0.55rem;
+            color: #6c757d;
+            letter-spacing: 0.4px;
+        }
+        .cred-header .h-logo-right img {
+            height: 24px;
+            width: auto;
+            display: block;
+        }
+
+        /* ===== PHOTO + BADGE ROW ===== */
+        .cred-photo-row {
+            display: flex;
+            padding: 16px 20px 10px;
+            gap: 16px;
+            align-items: flex-start;
+        }
+        .cred-photo-row .p-box {
+            width: 100px;
+            height: 120px;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cred-photo-row .p-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        .cred-photo-row .p-box .p-placeholder {
+            font-size: 3rem;
+            color: #adb5bd;
+        }
+        .cred-photo-row .p-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .cred-photo-row .p-info .p-badge {
+            display: inline-block;
+            font-size: 0.55rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            margin-bottom: 6px;
+        }
+        .cred-photo-row .p-info .p-badge.av { background: #198754; color: #fff; }
+        .cred-photo-row .p-info .p-badge.pd { background: #ffc107; color: #212529; }
+        .cred-photo-row .p-info .p-name {
+            font-weight: 800;
+            font-size: 1rem;
+            color: #1a1a1c;
+            line-height: 1.2;
+            text-transform: uppercase;
+            margin: 0;
+            word-break: break-word;
+        }
+        .cred-photo-row .p-info .p-last {
+            font-size: 0.7rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        /* ===== FOLIO ===== */
+        .cred-folio {
+            padding: 0 20px 8px;
+        }
+        .cred-folio .f-box {
+            background: #f2f4f6;
+            border-radius: 6px;
+            padding: 5px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .cred-folio .f-box .f-lbl {
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            color: #6c757d;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .cred-folio .f-box .f-val {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #C71E28;
+            letter-spacing: 0.8px;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* ===== INFO TABLE ===== */
+        .cred-info {
+            padding: 4px 20px 10px;
+        }
+        .cred-info table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .cred-info table tr td {
+            padding: 4px 0;
+            border-bottom: 1px solid #f0f2f4;
+            vertical-align: top;
+        }
+        .cred-info table tr:last-child td {
+            border-bottom: none;
+        }
+        .cred-info table .i-lbl {
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            color: #8c959f;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            width: 38%;
+        }
+        .cred-info table .i-val {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #1a1a1c;
+            width: 62%;
+        }
+        .cred-info table .i-val .sangre-icon {
+            color: #C71E28;
+            margin-right: 3px;
+        }
+        .cred-info table .i-val.curp {
+            font-size: 0.65rem;
+            font-family: 'Courier New', monospace;
+        }
+        .cred-info table .i-val.camiseta {
+            text-align: center;
+        }
+
+        /* ===== BOTTOM LOGOS + QR ===== */
+        .cred-bottom {
+            display: flex;
+            align-items: center;
+            padding: 6px 20px 10px;
+            gap: 10px;
+            border-top: 1px solid #eef0f2;
+        }
+        .cred-bottom .b-sponsors {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .cred-bottom .b-sponsors img {
+            height: 16px;
+            width: auto;
+            opacity: 0.5;
+        }
+        .cred-bottom .b-team-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px solid #e9ecef;
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+        }
+        .cred-bottom .b-team-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 3px;
+        }
+        .cred-bottom .b-team-logo .no-logo {
+            font-size: 1rem;
+            color: #ced4da;
+        }
+        .cred-bottom .b-qr {
+            flex-shrink: 0;
+        }
+        .cred-bottom .b-qr img {
+            width: 40px;
+            height: 40px;
+            display: block;
+        }
+
+        /* ===== FOOTER ===== */
+        .cred-footer {
+            background: #1a1a1c;
+            color: #fff;
+            text-align: center;
+            padding: 6px 16px;
+            font-size: 0.55rem;
+            letter-spacing: 0.2px;
+            opacity: 0.85;
+        }
+
+        /* ===== PRINT ===== */
+        .print-btn {
+            text-align: center;
+            margin-top: 16px;
+        }
+        @media print {
+            body { background: #fff; padding: 10px; }
+            .cred-card { box-shadow: none; border: 1px solid #dee2e6; max-width: 360px; margin: 0 auto; }
+            .print-btn { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div>
+    <div class="cred-card">
+
+        <div class="cred-top">
+            <div class="bar-red"></div>
+            <div class="bar-green"></div>
+            <div class="bar-red2"></div>
+        </div>
+
+        <div class="cred-header">
+            <div class="h-logo">
+                <img src="{% static 'gestion/img/logo_ademeba.png' %}" alt="ADEMEBA" onerror="this.style.display='none'">
+            </div>
+            <div class="h-title">
+                <div class="h-main">ADEMEBA OAXACA</div>
+                <div class="h-sub">CREDENCIAL OFICIAL {{ anio_torneo }}</div>
+            </div>
+            <div class="h-logo-right">
+                <img src="{% static 'gestion/img/logo_fiba.png' %}" alt="FIBA" onerror="this.style.display='none'">
+            </div>
+        </div>
+
+        <div class="cred-photo-row">
+            <div class="p-box">
+                {% if jugador.foto_perfil %}
+                    <img src="{{ jugador.foto_perfil.url }}" alt="Foto">
+                {% else %}
+                    <div class="p-placeholder"><i class="bi bi-person-fill"></i></div>
+                {% endif %}
+            </div>
+            <div class="p-info">
+                {% if jugador.validado %}
+                    <span class="p-badge av"><i class="bi bi-shield-check me-1"></i>AVALADO</span>
+                {% else %}
+                    <span class="p-badge pd"><i class="bi bi-hourglass-split me-1"></i>PENDIENTE</span>
+                {% endif %}
+                <div class="p-name">{{ jugador.nombres }}</div>
+                <div class="p-name">{{ jugador.apellido_paterno }}</div>
+                <div class="p-last">{{ jugador.apellido_materno }}</div>
+            </div>
+        </div>
+
+        <div class="cred-folio">
+            <div class="f-box">
+                <span class="f-lbl"><i class="bi bi-upc-scan me-1"></i>FOLIO DE AFILIACIÓN</span>
+                <span class="f-val">{{ jugador.numero_afiliacion|default:"PENDIENTE" }}</span>
+            </div>
+        </div>
+
+        <div class="cred-info">
+            <table>
+                <tr>
+                    <td class="i-lbl">Equipo</td>
+                    <td class="i-val">{{ jugador.equipo.club|default:"SIN CLUB" }}</td>
+                </tr>
+                <tr>
+                    <td class="i-lbl">Categoría</td>
+                    <td class="i-val">{{ jugador.categoria|default:"—" }} | {{ jugador.get_rama_display }}</td>
+                </tr>
+                <tr>
+                    <td class="i-lbl">Edad Deportiva</td>
+                    <td class="i-val">{{ edad }} años</td>
+                </tr>
+                <tr>
+                    <td class="i-lbl">Tipo de Sangre</td>
+                    <td class="i-val"><span class="sangre-icon"><i class="bi bi-droplet-fill"></i></span>{{ jugador.tipo_sangre }}</td>
+                </tr>
+                <tr>
+                    <td class="i-lbl">CURP</td>
+                    <td class="i-val curp">{{ jugador.curp }}</td>
+                </tr>
+                <tr>
+                    <td class="i-lbl">No. Camiseta</td>
+                    <td class="i-val camiseta">{{ jugador.numero_camiseta|default:"—" }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="cred-bottom">
+            <div class="b-sponsors">
+                <img src="{% static 'gestion/img/logo_negro.png' %}" alt="ADEMEBA" onerror="this.style.display='none'">
+                <img src="{% static 'gestion/img/logo_fiba.png' %}" alt="FIBA" onerror="this.style.display='none'">
+            </div>
+            <div class="b-team-logo">
+                {% if jugador.equipo and jugador.equipo.logo %}
+                    <img src="{{ jugador.equipo.logo.url }}" alt="{{ jugador.equipo.club }}">
+                {% else %}
+                    <i class="bi bi-shield-fill no-logo"></i>
+                {% endif %}
+            </div>
+            {% if jugador.codigo_qr %}
+            <div class="b-qr">
+                <img src="{{ jugador.codigo_qr.url }}" alt="QR">
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="cred-footer">
+            Documento válido para competiciones oficiales ADEMEBA {{ anio_torneo }}.
+        </div>
+    </div>
+
+    <div class="print-btn">
+        <button class="btn btn-light rounded-pill px-4 shadow-sm border" onclick="window.print()">
+            <i class="bi bi-printer me-2"></i>Imprimir Credencial
+        </button>
+    </div>
+</div>
+
+</body>
+</html>

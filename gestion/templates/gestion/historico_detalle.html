@@ -1,0 +1,148 @@
+{% extends 'gestion/base_dashboard.html' %}
+
+{% block header_title %}Registro Histórico: {{ temporada.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h3 class="fw-bold mb-1 text-dark" style="letter-spacing: -0.5px;"><i class="bi bi-archive-fill text-secondary me-2"></i> Expediente Histórico</h3>
+            <p class="text-muted small mb-0 fw-bold ms-1">Temporada Cerrada: {{ temporada.nombre }} ({{ temporada.fecha_inicio.year }})</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'descargar_resultados_excel' temporada.id %}" class="btn btn-success fw-bold rounded-pill px-4 shadow-sm">
+                <i class="bi bi-file-earmark-excel-fill me-2"></i> Reporte Global
+            </a>
+            <a href="javascript:history.back()" class="btn btn-light border fw-bold rounded-pill px-4 shadow-sm text-dark">
+                <i class="bi bi-arrow-left me-2"></i> Regresar
+            </a>
+        </div>
+    </div>
+
+    <!-- Pestañas Modernas -->
+    <ul class="nav nav-pills mb-4 gap-2 bg-white p-2 rounded-pill shadow-sm d-inline-flex" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active fw-bold rounded-pill px-4" data-bs-toggle="pill" data-bs-target="#posiciones"><i class="bi bi-trophy-fill me-2"></i>Podio Final</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold rounded-pill px-4 text-dark" data-bs-toggle="pill" data-bs-target="#rosters"><i class="bi bi-people-fill me-2"></i>Participantes</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-bold rounded-pill px-4 text-dark" data-bs-toggle="pill" data-bs-target="#partidos"><i class="bi bi-card-list me-2"></i>Enfrentamientos</button>
+        </li>
+    </ul>
+
+    <!-- Contenido de las Pestañas -->
+    <div class="tab-content">
+        
+        <!-- PESTAÑA 1: TABLA -->
+        <div class="tab-pane fade show active" id="posiciones">
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle text-center mb-0 border-0">
+                        <thead class="small text-muted border-bottom">
+                            <tr>
+                                <th class="pb-3">RANGO</th>
+                                <th class="text-start pb-3">EQUIPO PARTICIPANTE</th>
+                                <th class="pb-3">JUEGOS</th>
+                                <th class="pb-3">VICTORIAS</th>
+                                <th class="pb-3">DERROTAS</th>
+                                <th class="pb-3">PTS TOTALES</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fila in tabla_posiciones %}
+                            <tr>
+                                <td class="py-3">
+                                    {% if forloop.first %}
+                                        <i class="bi bi-star-fill text-warning fs-4"></i>
+                                    {% elif forloop.counter == 2 %}
+                                        <i class="bi bi-award-fill text-secondary fs-4"></i>
+                                    {% elif forloop.counter == 3 %}
+                                        <i class="bi bi-award-fill text-danger fs-4"></i>
+                                    {% else %}
+                                        <span class="fw-bold text-muted">{{ forloop.counter }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-start py-3 fw-bold text-dark fs-6">{{ fila.equipo.club }}</td>
+                                <td class="py-3 text-muted">{{ fila.pj }}</td>
+                                <td class="py-3 text-success fw-bold">{{ fila.pg }}</td>
+                                <td class="py-3 text-danger fw-bold">{{ fila.pp }}</td>
+                                <td class="py-3 fw-bold fs-5 text-primary">{{ fila.pts }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6" class="text-muted py-5">Registros no encontrados.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- PESTAÑA 2: ROSTERS -->
+        <div class="tab-pane fade" id="rosters">
+            <div class="row">
+                {% for ins in inscripciones %}
+                <div class="col-md-6 mb-3">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+                        <div class="card-body d-flex justify-content-between align-items-center p-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center border" style="width: 50px; height: 50px;">
+                                    <i class="bi bi-shield-shaded text-secondary fs-4"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-dark">{{ ins.equipo.club }}</h6>
+                                    <small class="text-muted">Coach: {{ ins.equipo.entrenador.get_full_name|default:ins.equipo.entrenador.username }}</small>
+                                </div>
+                            </div>
+                            <a href="{% url 'descargar_roster_excel' temporada.id ins.equipo.id %}" class="btn btn-light border fw-bold rounded-circle shadow-sm" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;" title="Descargar Roster Completo">
+                                <i class="bi bi-download text-dark"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5 text-muted">Torneo sin equipos participantes registrados.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- PESTAÑA 3: PARTIDOS -->
+        <div class="tab-pane fade" id="partidos">
+            <div class="card border-0 shadow-sm rounded-4 p-0 overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 text-center">
+                        <thead class="bg-light small text-muted border-bottom">
+                            <tr>
+                                <th class="py-3">FASE / JORNADA</th>
+                                <th class="py-3">FECHA DEL ENCUENTRO</th>
+                                <th class="text-end py-3">LOCAL</th>
+                                <th class="py-3 px-4">SCORE FINAL</th>
+                                <th class="text-start py-3">VISITANTE</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in partidos %}
+                            <tr>
+                                <td class="py-3"><span class="badge bg-dark rounded-pill px-3">{{ p.jornada }}</span></td>
+                                <td class="small text-muted py-3">{{ p.fecha_hora|date:"d M Y"|default:"-" }}</td>
+                                <td class="text-end fw-bold py-3 text-dark">{{ p.equipo_local.club }}</td>
+                                <td class="py-3">
+                                    <div class="bg-light border rounded-pill px-3 py-1 fw-bold fs-5 d-inline-block text-dark shadow-sm">
+                                        {{ p.puntos_local }} - {{ p.puntos_visitante }}
+                                    </div>
+                                </td>
+                                <td class="text-start fw-bold py-3 text-dark">{{ p.equipo_visitante.club }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center text-muted py-5">Bitácora de partidos vacía.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

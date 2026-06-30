@@ -1,0 +1,15 @@
+Django>=6.0,<6.1
+gunicorn>=23.0
+psycopg2-binary>=2.9
+python-dotenv>=1.0
+django-axes>=8.0
+reportlab>=4.0
+xhtml2pdf>=0.2
+qrcode>=8.0
+Pillow>=10.0
+lxml>=5.0
+cssselect2>=0.7
+tinycss2>=1.0
+html5lib>=1.1
+webencodings>=0.5
+whitenoise>=6.0

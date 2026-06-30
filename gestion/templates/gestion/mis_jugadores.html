@@ -1,0 +1,69 @@
+{% extends 'gestion/base_dashboard.html' %}
+{% block header_title %}Mis Jugadores{% endblock %}
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0">Jugadores Registrados</h4>
+            <p class="text-muted small mb-0">Todos los jugadores que has registrado como tutor.</p>
+        </div>
+        <a href="{% url 'equipos_tutor' %}" class="btn btn-dark fw-bold rounded-pill px-4 shadow-sm">
+            <i class="bi bi-person-plus-fill me-2"></i> Nuevo Registro
+        </a>
+    </div>
+
+    <div class="row g-4">
+        {% for j in jugadores %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="p-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="me-3" style="width: 60px; height: 60px;">
+                            {% if j.foto_perfil %}
+                            <img src="{{ j.foto_perfil.url }}" class="rounded-circle shadow-sm border border-2 border-white object-fit-cover" style="width: 100%; height: 100%;">
+                            {% else %}
+                            <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center h-100 fs-4">{{ j.nombres|first }}</div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0">{{ j.nombres }} {{ j.apellido_paterno }}</h6>
+                            <span class="badge bg-{{ j.semaforo.color }} bg-opacity-10 text-{{ j.semaforo.color }} fw-bold mt-1">
+                                <i class="bi {{ j.semaforo.icono }} me-1"></i> {{ j.semaforo.estatus }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted d-block"><i class="bi bi-shield-fill me-1"></i> {{ j.equipo.club|default:"Sin club" }}</small>
+                        <small class="text-muted d-block"><i class="bi bi-activity me-1"></i> {{ j.posicion }}</small>
+                        {% if j.sanciones_count > 0 %}
+                        <small class="text-danger d-block fw-bold"><i class="bi bi-exclamation-triangle-fill me-1"></i> {{ j.sanciones_count }} sanción{{ j.sanciones_count|pluralize:'es' }} activa{{ j.sanciones_count|pluralize:'s' }}</small>
+                        {% endif %}
+                        {% if j.estado_validacion == 'RECHAZADO' and j.motivo_rechazo %}
+                        <div class="alert alert-danger p-2 mt-2 mb-0 small rounded-3">
+                            <i class="bi bi-x-circle-fill me-1"></i> <strong>Motivo del rechazo:</strong> {{ j.motivo_rechazo }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'perfil_jugador' j.id %}" class="btn btn-outline-dark btn-sm rounded-pill fw-bold flex-fill">
+                            <i class="bi bi-eye me-1"></i> Ver Perfil
+                        </a>
+                        {% if j.estado_validacion != 'APROBADO' and j.intentos_registro < 3 %}
+                        <a href="{% url 'editar_jugador_tutor' j.pk %}" class="btn btn-warning btn-sm rounded-pill fw-bold flex-fill">
+                            <i class="bi bi-pencil me-1"></i> Editar
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="bi bi-people text-muted" style="font-size: 4rem;"></i>
+            <h4 class="fw-bold mt-3">No has registrado jugadores</h4>
+            <p class="text-muted">Registra a tu primer jugador haciendo clic en "Nuevo Registro".</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

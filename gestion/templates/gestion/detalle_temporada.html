@@ -1,0 +1,219 @@
+{% extends 'gestion/base_dashboard.html' %}
+
+{% block header_title %}Panel del Torneo: {{ temporada.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex gap-2">
+            <a href="{% url 'lista_temporadas' %}" class="btn btn-outline-dark fw-bold rounded-pill px-4 shadow-sm">
+                <i class="bi bi-arrow-left me-2"></i> Volver a Competiciones
+            </a>
+            <a href="{% url 'gestionar_partidos' temporada.id %}" class="btn btn-warning text-dark fw-bold rounded-pill px-4 shadow-sm">
+                <i class="bi bi-calendar-event-fill me-2"></i> Rol de Juegos
+            </a>
+        </div>
+        
+        <div class="d-flex gap-2 align-items-center">
+            {% if temporada.campeon %}
+                <span class="badge bg-dark fs-6 px-4 py-2 rounded-pill shadow-sm"><i class="bi bi-archive-fill me-2"></i>Histórico / Finalizada</span>
+            {% elif temporada.inscripciones_abiertas %}
+                <span class="badge bg-success fs-6 px-4 py-2 rounded-pill shadow-sm"><i class="bi bi-door-open-fill me-2"></i>Inscripciones Abiertas</span>
+            {% elif temporada.estado_actual == 'En Curso' %}
+                <span class="badge bg-success fs-6 px-4 py-2 rounded-pill shadow-sm"><i class="bi bi-play-circle-fill me-2"></i>En Curso</span>
+            {% elif temporada.estado_actual == 'Inscripciones Cerradas' %}
+                <span class="badge bg-danger fs-6 px-4 py-2 rounded-pill shadow-sm"><i class="bi bi-door-closed-fill me-2"></i>Inscripciones Cerradas</span>
+            {% else %}
+                <span class="badge bg-secondary fs-6 px-4 py-2 rounded-pill shadow-sm"><i class="bi bi-clock-history me-2"></i>Por Finalizar</span>
+            {% endif %}
+
+            {% if not temporada.campeon %}
+            <form method="POST" action="{% url 'toggle_inscripciones' temporada.id %}" class="d-inline-flex align-items-center gap-2">
+                {% csrf_token %}
+                <div class="form-check form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" role="switch" id="switch-inscripciones" 
+                           {% if temporada.inscripciones_abiertas %}checked{% endif %}
+                           onchange="this.form.submit()" style="transform: scale(1.3); cursor: pointer;">
+                    <label class="form-check-label fw-bold ms-1" for="switch-inscripciones" style="cursor: pointer;">
+                        {% if temporada.inscripciones_abiertas %}
+                            <span class="text-success">Inscripciones ABIERTAS</span>
+                        {% else %}
+                            <span class="text-danger">Inscripciones CERRADAS</span>
+                        {% endif %}
+                    </label>
+                </div>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if not temporada.campeon %}
+        {% if temporada.estado_actual == 'Por Finalizar' %}
+            <div class="alert alert-light border shadow-sm mb-4 d-flex align-items-center justify-content-between rounded-4 p-4">
+                <div>
+                    <h5 class="mb-1 fw-bold"><i class="bi bi-info-circle-fill text-primary me-2"></i>Cierre de Temporada</h5>
+                    <small class="text-muted fs-6">Declara un campeón para finalizar oficialmente el torneo, bloquear modificaciones y enviarlo al archivo histórico.</small>
+                </div>
+                <form action="{% url 'declarar_campeon' temporada.id %}" method="POST" class="d-flex gap-2 mb-0">
+                    {% csrf_token %}
+                    <select name="equipo_campeon" class="form-select form-select-sm border-warning fw-bold fs-6" required style="width: 250px; height: 40px;">
+                        <option value="">Selecciona al equipo ganador...</option>
+                        {% for inscripcion in inscripciones %}
+                            <option value="{{ inscripcion.equipo.id }}">{{ inscripcion.equipo.club }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-warning mb-0 fw-bold text-dark px-3" style="height: 40px;" onclick="return confirm('¿Estás totalmente seguro? Esto bloqueará los resultados del torneo y lo enviará al archivo histórico de forma definitiva.');">
+                        <i class="bi bi-trophy-fill me-1"></i> Declarar Campeón
+                    </button>
+                </form>
+            </div>
+        {% else %}
+            <div class="alert alert-secondary border border-secondary shadow-sm mb-4 text-center rounded-4 p-3">
+                <i class="bi bi-lock-fill me-2"></i> El torneo debe concluir sus fechas oficiales para poder declarar a un campeón.
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-warning border-warning border-2 shadow-sm mb-5 text-center rounded-4 p-4 bg-gradient">
+            <h2 class="fw-black mb-1 text-dark text-uppercase">
+                <i class="bi bi-trophy-fill text-warning me-2" style="font-size: 2.5rem;"></i> 
+                CAMPEÓN OFICIAL: {{ temporada.campeon.club }}
+            </h2>
+            <span class="badge bg-dark mt-2 fs-6 shadow-sm"><i class="bi bi-lock-fill me-1"></i> Torneo Sellado e Histórico</span>
+        </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <h5 class="fw-bold mb-4 border-bottom pb-2"><i class="bi bi-info-circle-fill text-warning me-2"></i> Datos de la Competición</h5>
+                
+                <div class="mb-3">
+                    <span class="text-muted small fw-bold d-block">Inicia:</span>
+                    <span class="fw-bold text-dark">{{ temporada.fecha_inicio|date:"d/m/Y" }}</span>
+                </div>
+                <div class="mb-3">
+                    <span class="text-muted small fw-bold d-block">Termina:</span>
+                    <span class="fw-bold text-dark">{{ temporada.fecha_fin|date:"d/m/Y" }}</span>
+                </div>
+                <div class="mb-3">
+                    <span class="text-muted small fw-bold d-block">Años Permitidos:</span>
+                    <span class="fw-bold text-primary">{{ temporada.anio_nac_min }} al {{ temporada.anio_nac_max }}</span>
+                </div>
+                <div class="mb-3">
+                    <span class="text-muted small fw-bold d-block">Rama:</span>
+                    <span class="fw-bold text-dark">{{ temporada.rama }}</span>
+                </div>
+                <div class="mb-3">
+                    <span class="text-muted small fw-bold d-block">Región:</span>
+                    <span class="fw-bold text-dark">{{ temporada.region }}</span>
+                </div>
+                <div class="mb-3">
+                    <span class="text-muted small fw-bold d-block">Costo Base:</span>
+                    <span class="fw-bold text-success">${{ temporada.costo_inscripcion }}</span>
+                </div>
+                <div class="mb-3">
+                    <span class="text-muted small fw-bold d-block">Tolerancia de Pago:</span>
+                    <span class="fw-bold text-dark">{{ temporada.dias_tolerancia_pago }} días</span>
+                </div>
+                <div class="mb-3">
+                    <span class="text-muted small fw-bold d-block">Estado Inscripciones:</span>
+                    {% if temporada.inscripciones_abiertas %}
+                        <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i> Abiertas</span>
+                    {% else %}
+                        <span class="badge bg-danger"><i class="bi bi-x-circle-fill me-1"></i> Cerradas</span>
+                    {% endif %}
+                </div>
+                <div class="mb-0">
+                    <span class="text-muted small fw-bold d-block">Equipos Inscritos:</span>
+                    <span class="badge bg-dark fs-6">{{ inscripciones.count }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8 mb-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
+                <h5 class="fw-bold mb-4 border-bottom pb-2"><i class="bi bi-shield-shaded text-primary me-2"></i> Roster por Equipos</h5>
+                
+                <div class="accordion" id="accordionEquipos">
+                    {% for ins in inscripciones_detalladas %}
+                    <div class="accordion-item border-0 mb-3 shadow-sm rounded-3 overflow-hidden">
+                        <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                            <button class="accordion-button collapsed fw-bold text-dark bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}">
+                                {% if temporada.campeon and temporada.campeon.id == ins.equipo.id %}
+                                    <i class="bi bi-trophy-fill text-warning me-2"></i>
+                                {% endif %}
+                                {{ ins.equipo.club }} - {{ ins.equipo.nombre }}
+                                
+                                <div class="ms-auto me-3 d-flex align-items-center gap-2">
+                                    <span class="badge bg-secondary">{{ ins.total_jugadores }} Jugadores</span>
+                                    
+                                    {% if ins.validada %}
+                                        <span class="badge bg-success shadow-sm"><i class="bi bi-check-circle-fill me-1"></i> Aprobado</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark shadow-sm"><i class="bi bi-hourglass-split me-1"></i> Pendiente</span>
+                                        {% if user.is_staff %}
+                                            <a href="{% url 'validar_inscripcion' ins.inscripcion_id %}" class="btn btn-sm btn-dark rounded-pill py-0 px-2" style="font-size: 0.75rem;" onclick="event.stopPropagation();">Validar</a>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse" data-bs-parent="#accordionEquipos">
+                            <div class="accordion-body p-0">
+                                
+                                <div class="bg-white p-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                    <span class="small fw-bold text-muted">ENTRENADOR: {{ ins.equipo.entrenador.get_full_name|default:ins.equipo.entrenador.username }}</span>
+                                    <div class="d-flex gap-2">
+                                        <a href="{% url 'descargar_roster_excel' temporada.id ins.equipo.id %}" class="btn btn-sm btn-success fw-bold rounded-pill shadow-sm">
+                                            <i class="bi bi-file-earmark-excel-fill me-1"></i> Excel (.csv)
+                                        </a>
+                                        <a href="{% url 'generar_cedula_pdf' temporada.id ins.equipo.id %}" target="_blank" class="btn btn-sm btn-danger fw-bold rounded-pill shadow-sm">
+                                            <i class="bi bi-file-earmark-pdf-fill me-1"></i> Cédula PDF
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-borderless table-hover mb-0">
+                                        <thead class="table-light small text-muted">
+                                            <tr>
+                                                <th class="ps-4">NOMBRE DEL JUGADOR</th>
+                                                <th>EDAD DEPORTIVA</th>
+                                                <th>CURP</th>
+                                                <th class="text-end pe-4">PERFIL HISTÓRICO</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for info in ins.jugadores_info %}
+                                            <tr class="border-bottom">
+                                                <td class="ps-4 fw-bold text-dark">{{ info.obj.nombres }} {{ info.obj.apellido_paterno }} {{ info.obj.apellido_materno }}</td>
+                                                <td><span class="badge border text-dark">{{ info.edad_calculada }} Años</span></td>
+                                                <td class="text-muted small">{{ info.obj.curp }}</td>
+                                                <td class="text-end pe-4">
+                                                    <a href="{% url 'perfil_jugador' info.obj.id %}" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill">Revisar Ficha</a>
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted py-3">Este equipo aún no ha subido su roster para este torneo.</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="alert alert-light text-center text-muted border py-4">
+                        Aún no hay equipos inscritos en este torneo.
+                    </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

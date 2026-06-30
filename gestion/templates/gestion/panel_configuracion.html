@@ -1,0 +1,130 @@
+{% extends 'gestion/base_dashboard.html' %}
+{% block header_title %}Configuración del Sistema{% endblock %}
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0">Configuración Global</h4>
+            <p class="text-muted small mb-0">Administra las inscripciones globales y valores por defecto del sistema.</p>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} fw-bold shadow-sm border-0 rounded-4">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <h5 class="fw-bold mb-4 border-bottom pb-2"><i class="bi bi-calendar-check me-2"></i> Periodo de Inscripciones Globales</h5>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-4 form-check form-switch fs-5">
+                        {{ form.inscripciones_abiertas }}
+                        <label class="form-check-label fw-bold" for="{{ form.inscripciones_abiertas.id_for_label }}">
+                            {% if config.inscripciones_activas %}
+                            <span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> Inscripciones ABIERTAS</span>
+                            {% else %}
+                            <span class="text-danger"><i class="bi bi-x-circle-fill me-1"></i> Inscripciones CERRADAS</span>
+                            {% endif %}
+                        </label>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Fecha de Inicio</label>
+                            {{ form.fecha_inicio_inscripciones }}
+                            <small class="text-muted">Los tutores podrán registrar desde esta fecha.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Fecha de Cierre</label>
+                            {{ form.fecha_fin_inscripciones }}
+                            <small class="text-muted">Después de esta fecha se cierran automáticamente.</small>
+                        </div>
+                    </div>
+                    <hr>
+                    <h5 class="fw-bold mb-3 mt-4"><i class="bi bi-currency-dollar me-2"></i> Costo de Inscripción</h5>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Costo general de inscripción ($)</label>
+                        {{ form.costo_inscripcion }}
+                        <small class="text-muted">Monto que se cobrará por cada inscripción de jugador (tutor, captura admin, cambio de club, reactivación).</small>
+                    </div>
+                    <hr>
+                    <h5 class="fw-bold mb-3 mt-4"><i class="bi bi-currency-dollar me-2"></i> Multas y Sanciones</h5>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Monto de Multa por Defecto ($)</label>
+                        {{ form.monto_sancion_default }}
+                        <small class="text-muted">Valor sugerido al crear una sanción. Se puede modificar por cada sanción.</small>
+                    </div>
+                    <hr>
+                    <h5 class="fw-bold mb-3 mt-4"><i class="bi bi-bank me-2"></i> Información Bancaria para Pagos</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Número de cuenta</label>
+                            {{ form.numero_cuenta }}
+                            <small class="text-muted">Cuenta donde los tutores depositarán los pagos.</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Nombre del banco</label>
+                            {{ form.banco }}
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Titular de la cuenta</label>
+                        {{ form.nombre_cuenta }}
+                        <small class="text-muted">Nombre completo del titular de la cuenta bancaria.</small>
+                    </div>
+                    <button type="submit" class="btn btn-dark fw-bold rounded-pill px-5 py-2 shadow-sm">
+                        <i class="bi bi-save me-2"></i> Guardar Configuración
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-light">
+                <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-2"></i> Estado Actual</h6>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0">
+                        Inscripciones Globales
+                        <span class="badge bg-{% if config.inscripciones_abiertas %}success{% else %}danger{% endif %} rounded-pill">
+                            {{ config.inscripciones_abiertas|yesno:"Activas,Cerradas" }}
+                        </span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0">
+                        Fecha Inicio
+                        <span class="fw-bold">{{ config.fecha_inicio_inscripciones|default:"No definida" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0">
+                        Fecha Fin
+                        <span class="fw-bold">{{ config.fecha_fin_inscripciones|default:"No definida" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0">
+                        Multa Default
+                        <span class="fw-bold text-danger">${{ config.monto_sancion_default }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0">
+                        Costo Inscripción
+                        <span class="fw-bold text-success">${{ config.costo_inscripcion }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0">
+                        Estado automático
+                        <span class="badge bg-{% if config.inscripciones_activas %}success{% else %}secondary{% endif %} rounded-pill">
+                            {{ config.inscripciones_activas|yesno:"Abierto,Cerrado" }}
+                        </span>
+                    </li>
+                    {% if config.banco %}
+                    <li class="list-group-item bg-transparent px-0 border-0">
+                        <hr class="my-2">
+                        <span class="fw-bold small text-muted d-block mb-1">DATOS BANCARIOS</span>
+                        <span class="d-block small">Banco: <strong>{{ config.banco }}</strong></span>
+                        <span class="d-block small">Cuenta: <strong>{{ config.numero_cuenta }}</strong></span>
+                        <span class="d-block small">Titular: <strong>{{ config.nombre_cuenta }}</strong></span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,151 @@
+{% extends 'gestion/base_dashboard.html' %}
+
+{% block header_title %}Directorio de Equipos{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0">Gestión de Clubes y Franquicias</h4>
+            <p class="text-muted small mb-0">Administra los equipos clasificados por su rama y categoría de edad.</p>
+        </div>
+        <button class="btn btn-warning fw-bold px-4 rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCrearEquipo">
+            <i class="bi bi-plus-circle-fill me-2"></i> Crear Nuevo Equipo
+        </button>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-success fw-bold shadow-sm border-0">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row g-4">
+        {% for equipo in equipos %}
+        <div class="col-md-4 col-lg-3">
+            <div class="card border-0 shadow-sm rounded-4 h-100 text-center p-3 hover-effect">
+                <div class="mx-auto mt-2 mb-3 bg-light rounded-circle d-flex align-items-center justify-content-center border" style="width: 90px; height: 90px; overflow: hidden;">
+                    {% if equipo.logo %}
+                        <img src="{{ equipo.logo.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                        <i class="bi bi-shield-fill text-secondary fs-1"></i>
+                    {% endif %}
+                </div>
+                <h6 class="fw-bold mb-0">{{ equipo.club }}</h6>
+                <p class="text-muted small mb-1">{{ equipo.nombre }}</p>
+                
+                <div class="mb-3">
+                    {% if equipo.categoria %}
+                    <span class="badge bg-dark">{{ equipo.categoria }}</span>
+                    {% endif %}
+                    {% if equipo.rama != 'Mixta' %}
+                    <span class="badge bg-secondary">{{ equipo.rama }}</span>
+                    {% endif %}
+                    <span class="badge bg-info bg-opacity-10 text-info fw-bold">
+                        <i class="bi bi-people-fill me-1"></i>{{ equipo.max_jugadores }} cupo
+                    </span>
+                </div>
+                
+                <div class="bg-light rounded p-2 mb-3 small">
+                    <span class="d-block text-muted fw-bold" style="font-size: 0.7rem;">COACH EN JEFE</span>
+                    {% if equipo.entrenador %}
+                        <span class="text-dark fw-bold">{{ equipo.entrenador.get_full_name|default:equipo.entrenador.username }}</span>
+                    {% else %}
+                        <span class="text-danger">Sin asignar</span>
+                    {% endif %}
+                </div>
+
+                <div class="mt-auto d-flex flex-column gap-2">
+                    <a href="{% url 'gestionar_equipo' equipo.id %}" class="btn btn-outline-dark btn-sm w-100 rounded-pill fw-bold">
+                        Entrar al Panel
+                    </a>
+                    
+                    <!-- BOTÓN ELIMINAR (SOLO PARA ADMINS/SECRETARIAS) -->
+                    {% if user.is_staff or user.is_superuser %}
+                    <a href="{% url 'eliminar_equipo' equipo.id %}" class="btn btn-danger btn-sm w-100 rounded-pill fw-bold" onclick="return confirm('¿ESTÁS TOTALMENTE SEGURO? Al eliminar este equipo, los jugadores inscritos en él quedarán sin club y se borrarán sus registros de liga. Esta acción NO se puede deshacer.');">
+                        <i class="bi bi-trash-fill me-1"></i> Eliminar Equipo
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-secondary text-center py-5 border-0 rounded-4">
+                <i class="bi bi-shield-x fs-1 d-block mb-3 text-muted"></i>
+                <h5 class="fw-bold">No hay equipos registrados</h5>
+                <p class="text-muted">Da clic en "Crear Nuevo Equipo" para empezar a nutrir la liga.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if equipos.has_other_pages %}
+    <nav aria-label="Navegación de equipos" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if equipos.has_previous %}
+                <li class="page-item">
+                    <a class="page-link shadow-sm" href="?page={{ equipos.previous_page_number }}">Anterior</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+            {% endif %}
+            {% for i in equipos.paginator.page_range %}
+                {% if equipos.number == i %}
+                    <li class="page-item active"><span class="page-link shadow-sm">{{ i }}</span></li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link shadow-sm" href="?page={{ i }}">{{ i }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            {% if equipos.has_next %}
+                <li class="page-item">
+                    <a class="page-link shadow-sm" href="?page={{ equipos.next_page_number }}">Siguiente</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    <!-- MODAL PARA CREAR EQUIPO -->
+    <div class="modal fade" id="modalCrearEquipo" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content p-4 border-0 rounded-4 shadow-lg">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="fw-bold mb-0">Alta de Equipo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <style>
+                            .modal-body form p { margin-bottom: 1.2rem; }
+                            .modal-body form input, .modal-body form select { 
+                                width: 100%; padding: 0.5rem 0.75rem; 
+                                border: 1px solid #ced4da; border-radius: 0.5rem; 
+                            }
+                            .modal-body form input[type="checkbox"] { width: auto; }
+                        </style>
+                        <div class="bg-light p-3 rounded-3 mb-3 border">
+                            {{ form_equipo.as_p }}
+                        </div>
+                        <button type="submit" name="btn_crear_equipo" class="btn btn-dark w-100 fw-bold mt-2 py-2 rounded-pill shadow-sm">
+                            Guardar y Registrar Equipo
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .hover-effect { transition: transform 0.2s ease-in-out; }
+    .hover-effect:hover { transform: translateY(-5px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
+</style>
+{% endblock %}

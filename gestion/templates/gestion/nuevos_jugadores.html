@@ -1,0 +1,64 @@
+{% extends 'gestion/base_dashboard.html' %}
+
+{% block header_title %}Nuevos Jugadores - {{ equipo.club }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0 text-dark"><i class="bi bi-person-lines-fill text-primary me-2"></i> Trámites en Proceso</h4>
+            <p class="text-muted small mb-0">Jugadores que pidieron ingresar a tu club y están en revisión por ADEMEBA.</p>
+        </div>
+        <a href="{% url 'gestionar_equipo' equipo.id %}" class="btn btn-dark fw-bold rounded-pill px-4 shadow-sm">
+            Ir a Mi Vestidor Oficial
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-0 bg-white overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light text-muted small">
+                    <tr>
+                        <th class="ps-4 py-3">JUGADOR / TUTOR</th>
+                        <th class="py-3">AÑO / RAMA</th>
+                        <th class="py-3 text-center">ESTATUS ACTUAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for j in nuevos_jugadores %}
+                    <tr>
+                        <td class="ps-4 py-3">
+                            <div class="d-flex align-items-center">
+                                <div style="width: 45px; height: 45px; border-radius: 50%; overflow: hidden;" class="me-3 border shadow-sm d-flex align-items-center justify-content-center bg-light">
+                                    {% if j.foto_perfil %}
+                                        <img src="{{ j.foto_perfil.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    {% else %}
+                                        <i class="bi bi-person text-secondary fs-4"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <span class="fw-bold text-dark d-block">{{ j.nombres }} {{ j.apellido_paterno }}</span>
+                                    <small class="text-muted"><i class="bi bi-envelope-fill me-1"></i> {{ j.tutor.email }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="py-3">
+                            <span class="fw-bold">{{ j.fecha_nacimiento.year }}</span> <span class="badge bg-secondary ms-1">{{ j.rama }}</span>
+                        </td>
+                        <td class="text-center py-3">
+                            {% if j.estado_validacion == 'RECHAZADO' %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-pill px-3"><i class="bi bi-exclamation-octagon-fill me-1"></i> El tutor debe corregir documentos</span>
+                            {% else %}
+                                <span class="badge bg-warning bg-opacity-10 text-dark border border-warning rounded-pill px-3"><i class="bi bi-hourglass-split me-1"></i> Esperando aprobación de ADEMEBA</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="text-center text-muted py-5">No hay jugadores pendientes de validación para tu equipo.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

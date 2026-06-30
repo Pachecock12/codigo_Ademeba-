@@ -1,0 +1,65 @@
+{% extends 'gestion/base_dashboard.html' %}
+
+{% block header_title %}Configuración y Sistema{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-5 border-bottom pb-3">
+        <div>
+            <h3 class="fw-bold mb-1 text-dark" style="letter-spacing: -0.5px;"><i class="bi bi-hdd-network-fill text-info me-2"></i> Panel de Sistema y DB</h3>
+            <p class="text-muted small mb-0 fw-bold ms-1">Métricas en tiempo real y Respaldos (Solo Superusuario)</p>
+        </div>
+    </div>
+
+    <!-- Módulo de Respaldo -->
+    <div class="card border-0 shadow-sm rounded-4 bg-dark text-white p-4 mb-5 position-relative overflow-hidden">
+        <div class="position-absolute opacity-10" style="right: -20px; top: -30px; font-size: 15rem;">
+            <i class="bi bi-cloud-arrow-down-fill"></i>
+        </div>
+        <div class="row position-relative z-1">
+            <div class="col-md-8">
+                <h4 class="fw-bold text-warning mb-3"><i class="bi bi-database-fill-down me-2"></i> Generar Respaldo Local</h4>
+                <p class="text-light opacity-75 mb-4">
+                    Descarga una copia de seguridad completa (Volcado JSON) de todos los registros del sistema. Es altamente recomendable realizar este proceso antes de finalizar una temporada deportiva o al menos una vez por semana.
+                </p>
+                <a href="{% url 'descargar_respaldo_bd' %}" class="btn btn-warning fw-bold text-dark rounded-pill px-4 shadow py-2">
+                    <i class="bi bi-download me-2"></i> Extraer Base de Datos (JSON)
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métricas Rápidas -->
+    <h5 class="fw-bold text-dark mb-4"><i class="bi bi-activity text-danger me-2"></i> Volumen de Datos Actual</h5>
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 text-center h-100">
+                <i class="bi bi-people-fill text-primary mb-2" style="font-size: 2.5rem;"></i>
+                <h2 class="fw-bold text-dark mb-0">{{ stats.total_jugadores }}</h2>
+                <p class="text-muted small fw-bold mb-0">Niños Registrados</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 text-center h-100">
+                <i class="bi bi-shield-shaded text-secondary mb-2" style="font-size: 2.5rem;"></i>
+                <h2 class="fw-bold text-dark mb-0">{{ stats.total_equipos }}</h2>
+                <p class="text-muted small fw-bold mb-0">Clubes / Equipos</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 text-center h-100">
+                <i class="bi bi-trophy-fill text-warning mb-2" style="font-size: 2.5rem;"></i>
+                <h2 class="fw-bold text-dark mb-0">{{ stats.total_torneos }}</h2>
+                <p class="text-muted small fw-bold mb-0">Torneos en BD</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 text-center h-100">
+                <i class="bi bi-person-badge-fill text-success mb-2" style="font-size: 2.5rem;"></i>
+                <h2 class="fw-bold text-dark mb-0">{{ stats.total_usuarios }}</h2>
+                <p class="text-muted small fw-bold mb-0">Cuentas de Acceso</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends 'gestion/base_dashboard.html' %}
+
+{% block header_title %}Competiciones Oficiales Activas{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0 text-dark">Torneos y Ligas Oficiales</h4>
+            <p class="text-muted small mb-0">Controla el flujo del año deportivo. Múltiples torneos pueden estar activos a la vez.</p>
+        </div>
+        <button class="btn btn-dark fw-bold px-4 rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNuevaTemporada">
+            <i class="bi bi-plus-circle-fill me-2"></i> Aperturar Torneo
+        </button>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %} fw-bold shadow-sm border-0 alert-dismissible fade show">
+                <i class="bi {% if message.tags == 'error' %}bi-exclamation-triangle-fill{% else %}bi-check-circle-fill{% endif %} me-2"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card border-0 shadow-sm rounded-4 p-4">
+        <div class="table-responsive">
+            <table class="table align-middle table-hover text-center">
+                <thead class="table-light text-muted small">
+                    <tr>
+                        <th class="text-start">COMPETICIÓN</th>
+                        <th>AÑOS PERMITIDOS / RAMA</th>
+                        <th>REGIÓN</th>
+                        <th>FECHAS DEL TORNEO</th>
+                        <th>EQUIPOS INSCRITOS</th>
+                        <th>INSCRIPCIONES</th>
+                        <th>ESTADO</th>
+                        <th>OPCIONES</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in temporadas %}
+                    <tr>
+                        <td class="text-start fw-bold text-dark fs-6">{{ t.nombre }}</td>
+                        <td>
+                            <span class="badge bg-dark d-block mb-1">Años: {{ t.anio_nac_min }} - {{ t.anio_nac_max }}</span>
+                            <span class="badge bg-secondary d-block">{{ t.rama }}</span>
+                        </td>
+                        <td><span class="badge bg-info text-dark rounded-pill">{{ t.region }}</span></td>
+                        <td class="small text-muted">
+                            Inicia: {{ t.fecha_inicio|date:"d/m/Y" }}<br>
+                            Termina: {{ t.fecha_fin|date:"d/m/Y" }}
+                        </td>
+                        <td class="fw-bold fs-5">{{ t.inscritos }}</td>
+                        <td>
+                            {% if t.inscripciones_abiertas %}
+                                <span class="badge bg-success rounded-pill px-3 py-2"><i class="bi bi-door-open-fill me-1"></i> Abiertas</span>
+                            {% else %}
+                                <span class="badge bg-danger rounded-pill px-3 py-2"><i class="bi bi-door-closed-fill me-1"></i> Cerradas</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if t.estado_actual == 'Inscripciones' %}
+                                <span class="badge bg-info text-dark rounded-pill px-3 py-2"><i class="bi bi-door-open-fill me-1"></i> Inscripciones</span>
+                            {% elif t.estado_actual == 'Inscripciones Cerradas' %}
+                                <span class="badge bg-danger rounded-pill px-3 py-2"><i class="bi bi-door-closed-fill me-1"></i> Cerradas</span>
+                            {% elif t.estado_actual == 'En Curso' %}
+                                <span class="badge bg-success rounded-pill px-3 py-2"><i class="bi bi-play-circle-fill me-1"></i> En Curso</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark rounded-pill px-3 py-2"><i class="bi bi-hourglass-split me-1"></i> Por Finalizar</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-dark fw-bold dropdown-toggle rounded-pill px-3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Opciones
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+                                    <li><a class="dropdown-item fw-bold text-dark py-2" href="{% url 'detalle_temporada' t.id %}"><i class="bi bi-eye-fill me-2"></i> Ver Equipos y Cierre</a></li>
+                                    <li><a class="dropdown-item fw-bold text-primary py-2" href="{% url 'editar_temporada' t.id %}"><i class="bi bi-pencil-square me-2"></i> Editar Torneo</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item fw-bold text-danger py-2" href="{% url 'eliminar_temporada' t.id %}" onclick="return confirm('¿ESTÁS TOTALMENTE SEGURO DE ELIMINAR ESTE TORNEO? Se borrarán todas las listas de inscripción ligadas a él de manera permanente.');"><i class="bi bi-trash-fill me-2"></i> Eliminar Torneo</a></li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-5">
+                            <i class="bi bi-trophy fs-1 d-block mb-3"></i>
+                            Aún no hay competiciones activas registradas en el sistema.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalNuevaTemporada" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content p-4 border-0 rounded-4">
+                <div class="modal-header border-bottom-0"><h5 class="fw-bold mb-0">Registrar Nuevo Torneo o Categoría</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="bg-light p-3 rounded mb-3 border">
+                            <style>#modalNuevaTemporada form input, #modalNuevaTemporada form select { width: 100%; padding: 0.5rem; border: 1px solid #ced4da; border-radius: 0.5rem; margin-bottom: 10px;}</style>
+                            {{ form_temporada.as_p }}
+                        </div>
+                        <button type="submit" name="btn_crear_temporada" class="btn btn-dark w-100 fw-bold rounded-pill">Aperturar Torneo</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,135 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Cédula de Equipo - ADEMEBA</title>
+    <style>
+        @page { size: letter portrait; margin: 1.5cm; }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 9pt; color: #000; }
+        .header-table { width: 100%; text-align: center; margin-bottom: 20px; }
+        .header-text h3, .header-text h4 { margin: 0; padding: 0; line-height: 1.2; }
+        .info-table { width: 100%; border: 1.5px solid #000; border-collapse: collapse; margin-bottom: 20px; font-size: 10pt; font-weight: bold; }
+        .info-table td { border: 1.5px solid #000; padding: 6px; }
+        .player-grid { width: 100%; border-collapse: collapse; }
+        .player-cell { width: 50%; border: 1.5px solid #000; padding: 5px; vertical-align: top; }
+        .player-inner-table { width: 100%; }
+        .photo-cell { width: 70px; height: 90px; border: 1px solid #999; text-align: center; vertical-align: middle; background-color: #f4f4f4; }
+        .photo-img { max-width: 65px; max-height: 85px; }
+        .data-cell { padding-left: 10px; vertical-align: top; }
+        .data-label { font-weight: bold; font-size: 8pt; color: #333; }
+        .data-value { font-size: 9pt; border-bottom: 1px solid #000; margin-bottom: 3px; }
+        .signatures { width: 100%; margin-top: 40px; text-align: center; font-size: 9pt; font-weight: bold; }
+        .sig-line { border-bottom: 1px solid #000; width: 80%; margin: 0 auto 5px auto; }
+    </style>
+</head>
+<body>
+    <table class="header-table">
+        <tr>
+            <td width="15%" style="text-align: center;"><img src="{% static 'gestion/img/logo_ademebaoaxaca.png' %}" height="65"></td>
+            <td width="70%" class="header-text">
+                <h3 style="font-size: 11pt;">CIRCUITO DE BASQUETBOL DEL ESTADO DE OAXACA CIEBO A.C. ADEMEBA OAXACA</h3>
+                <h4 style="font-size: 10pt; color: #444;">{{ temporada.nombre|upper }}</h4>
+                <h3 style="font-size: 14pt; margin-top: 5px;">CÉDULA DE EQUIPO</h3>
+            </td>
+            <td width="15%" style="text-align: center;"><img src="{% static 'gestion/img/logo_negro.png' %}" height="60"></td>
+        </tr>
+    </table>
+
+    <table class="info-table">
+        <tr>
+            <td width="40%">CLUB: <span style="color: #d9232a;">{{ equipo.club|upper }} ({{ equipo.nombre|upper }})</span></td>
+            <td width="35%">AÑOS: <span style="color: #d9232a;">{{ temporada.anio_nac_min }} al {{ temporada.anio_nac_max }}</span></td>
+            <td width="25%">RAMA: <span style="color: #d9232a;">{{ temporada.rama|upper }}</span></td>
+        </tr>
+    </table>
+
+    <table class="player-grid">
+        {% for par in pares_jugadores %}
+        <tr>
+            {% for j in par %}
+            <td class="player-cell">
+                <table class="player-inner-table">
+                    <tr>
+                        <td class="photo-cell">
+                            {% if j.foto_perfil %}<img src="{{ j.foto_perfil.url }}" class="photo-img">{% else %}<span style="color:#777;">FOTO</span>{% endif %}
+                        </td>
+                        <td class="data-cell">
+                            <div><span class="data-label">A. Paterno:</span> <span class="data-value">{{ j.apellido_paterno|upper }}</span></div>
+                            <div><span class="data-label">A. Materno:</span> <span class="data-value">{{ j.apellido_materno|upper }}</span></div>
+                            <div><span class="data-label">Nombre(s):</span> <span class="data-value">{{ j.nombres|upper }}</span></div>
+                            <div><span class="data-label">CURP:</span> <span class="data-value">{{ j.curp }}</span></div>
+                            <div><span class="data-label"># Afiliación:</span> <span class="data-value">{{ j.numero_afiliacion|default:"EN TRÁMITE" }}</span></div>
+                            <div><span class="data-label"># Uniforme:</span> <span class="data-value" style="font-size: 12pt; font-weight: bold; color: #d9232a;">{{ j.numero_camiseta|default:"-" }}</span></div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            {% endfor %}
+            {% if par|length == 1 %}<td class="player-cell"></td>{% endif %}
+        </tr>
+        {% endfor %}
+    </table>
+
+    {% if perfil_entrenador %}
+    <h3 style="font-size: 11pt; text-align: center; margin: 20px 0 5px 0; padding: 0;">ENTRENADOR</h3>
+    <table class="player-grid">
+        <tr>
+            <td class="player-cell" colspan="2">
+                <table class="player-inner-table">
+                    <tr>
+                        <td class="photo-cell">
+                            {% if perfil_entrenador.foto %}<img src="{{ perfil_entrenador.foto.url }}" class="photo-img">{% else %}<span style="color:#777;">FOTO</span>{% endif %}
+                        </td>
+                        <td class="data-cell">
+                            <div><span class="data-label">Nombre(s):</span> <span class="data-value">{{ equipo.entrenador.first_name|upper }}</span></div>
+                            <div><span class="data-label">Apellidos:</span> <span class="data-value">{{ equipo.entrenador.last_name|upper }}</span></div>
+                            <div><span class="data-label">CURP:</span> <span class="data-value">{{ perfil_entrenador.curp|default:"-" }}</span></div>
+                            <div><span class="data-label">Teléfono:</span> <span class="data-value">{{ perfil_entrenador.telefono|default:"-" }}</span></div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    {% endif %}
+
+    {% if staff_miembros %}
+    <h3 style="font-size: 11pt; text-align: center; margin: 20px 0 5px 0; padding: 0;">CUERPO TÉCNICO</h3>
+    <table class="player-grid">
+        {% for par in staff_miembros %}
+            {% if forloop.counter0|divisibleby:2 %}<tr>{% endif %}
+            <td class="player-cell">
+                <table class="player-inner-table">
+                    <tr>
+                        <td class="photo-cell">
+                            {% if par.foto %}<img src="{{ par.foto.url }}" class="photo-img">{% else %}<span style="color:#777;">FOTO</span>{% endif %}
+                        </td>
+                        <td class="data-cell">
+                            <div><span class="data-label">Nombre(s):</span> <span class="data-value">{{ par.nombres|upper }}</span></div>
+                            <div><span class="data-label">Apellidos:</span> <span class="data-value">{{ par.apellidos|upper }}</span></div>
+                            <div><span class="data-label">CURP:</span> <span class="data-value">{{ par.curp|default:"-" }}</span></div>
+                            <div><span class="data-label">Teléfono:</span> <span class="data-value">{{ par.telefono|default:"-" }}</span></div>
+                            <div><span class="data-label">Cargo:</span> <span class="data-value" style="font-size: 8pt; color: #555;">{{ par.cargo|upper }}</span></div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            {% if forloop.counter|divisibleby:2 %}</tr>{% endif %}
+            {% if forloop.last and not forloop.counter|divisibleby:2 %}<td class="player-cell"></td></tr>{% endif %}
+        {% endfor %}
+    </table>
+    {% endif %}
+
+    <table class="signatures">
+        <tr>
+            <td width="100%" style="text-align: center;">
+                <img src="{% static 'gestion/img/firma_presidente.png' %}" width="130" height="auto" style="max-height: 50px;">
+                <div style="margin-top: 1px;">ARQ. LUIS CARPIO PÉREZ</div>
+                <div style="font-size: 7pt; font-weight: normal;">PRESIDENTE DEL CIEBO A.C.</div>
+                <div style="font-size: 7pt; font-weight: normal;">ADEMEBA OAXACA</div>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

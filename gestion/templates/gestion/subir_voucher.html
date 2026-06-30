@@ -1,0 +1,58 @@
+{% extends 'gestion/base_dashboard.html' %}
+{% load static %}
+
+{% block header_title %}Liquidación de Adeudo{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="bg-primary text-white p-4 text-center">
+                    <i class="bi bi-receipt display-4 mb-2 d-block"></i>
+                    <h4 class="fw-bold mb-0">Enviar Comprobante de Pago</h4>
+                </div>
+                
+                <div class="card-body p-4">
+                    <div class="alert alert-light border rounded-3 mb-4">
+                        <h6 class="fw-bold text-muted mb-1">DETALLE DEL CARGO</h6>
+                        <h5 class="fw-bold text-dark mb-2">{{ adeudo.concepto }}</h5>
+                        <hr>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted fw-bold">Total a Pagar:</span>
+                            <span class="fs-4 fw-bold text-danger">${{ adeudo.monto }}</span>
+                        </div>
+                    </div>
+
+                    {% if config and config.banco %}
+                    <div class="alert alert-primary border-0 rounded-3 mb-4">
+                        <h6 class="fw-bold mb-2"><i class="bi bi-bank me-2"></i> Datos bancarios para realizar el pago</h6>
+                        <p class="mb-1 small">Banco: <strong>{{ config.banco }}</strong></p>
+                        <p class="mb-1 small">Cuenta: <strong>{{ config.numero_cuenta }}</strong></p>
+                        <p class="mb-0 small">Titular: <strong>{{ config.nombre_cuenta }}</strong></p>
+                        <hr class="my-2">
+                        <p class="mb-0 small text-muted"><i class="bi bi-info-circle me-1"></i> Una vez realizado el depósito, sube el comprobante aquí abajo.</p>
+                    </div>
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-dark"><i class="bi bi-file-earmark-arrow-up-fill me-1"></i> Sube tu foto o PDF del voucher</label>
+                            {{ form.voucher_comprobante }}
+                            <div class="form-text mt-2"><i class="bi bi-info-circle me-1"></i>Asegúrate de que la fecha, monto y concepto de la transferencia sean legibles.</div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary fw-bold rounded-pill py-3 shadow-sm">
+                                <i class="bi bi-send-fill me-1"></i> Enviar a Revisión
+                            </button>
+                            <a href="{% url 'dashboard' %}" class="btn btn-light fw-bold rounded-pill py-2">Cancelar y Volver</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

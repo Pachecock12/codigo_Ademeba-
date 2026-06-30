@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificar Solicitud | ADEMEBA OAXACA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        
+        body, html { height: 100%; margin: 0; font-family: 'Inter', sans-serif; background-color: #000; }
+        
+        .split-screen { display: flex; height: 100vh; overflow: hidden; }
+        
+        .left-side { 
+            flex: 1; 
+            background: radial-gradient(circle at 20% 30%, #202428 0%, #000000 100%);
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center;
+            padding: 2rem;
+            position: relative;
+        }
+        
+        .login-box {
+            width: 100%;
+            max-width: 440px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2.5rem;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .brand-logo { 
+            font-size: 2.5rem; 
+            font-weight: 900; 
+            color: #fff; 
+            letter-spacing: -2px; 
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .brand-logo span { color: #dca311; }
+
+        .form-control {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }
+        
+        .form-control:focus {
+            background: rgba(255,255,255,0.1);
+            border-color: #dca311;
+            color: #fff;
+            box-shadow: 0 0 0 0.25rem rgba(220, 163, 17, 0.25);
+        }
+
+        .btn-elite {
+            background-color: #dca311;
+            border: none;
+            color: #000;
+            font-weight: 800;
+            padding: 1rem;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .btn-elite:hover {
+            background-color: #f0b418;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(220, 163, 17, 0.3);
+        }
+
+        .code-display {
+            background: rgba(220,163,17,0.1);
+            border: 2px dashed #dca311;
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #dca311;
+            letter-spacing: 4px;
+        }
+
+        .right-side { 
+            flex: 1.2; 
+            background: url('https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=2090&auto=format&fit=crop') no-repeat center center;
+            background-size: cover;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .right-side::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(45deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 100%);
+        }
+
+        .overlay-text {
+            position: relative;
+            z-index: 2;
+            color: #fff;
+            text-align: center;
+        }
+
+        .overlay-text h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+        }
+
+        .text-gold { color: #dca311; }
+
+        @media (max-width: 992px) {
+            .right-side { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="split-screen">
+        <div class="left-side">
+            <div class="brand-logo">ADEMEBA<span>.</span>OAX</div>
+            
+            <div class="login-box">
+                <h4 class="text-white fw-bold mb-1">Verificar Solicitud</h4>
+                <p class="text-white-50 small mb-4">Revisa si tu solicitud de cambio de contraseña ya fue aprobada.</p>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} py-2 small fw-bold rounded-3 border-0 {% if message.tags == 'error' %}bg-danger bg-opacity-25 text-white{% elif message.tags == 'success' %}bg-success bg-opacity-25 text-white{% endif %}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+
+                {% if not email_consultado %}
+                    <form method="get" action="{% url 'verificar_solicitud_contrasena' %}">
+                        <div class="mb-3">
+                            <label class="text-white-50 small fw-bold mb-2">Correo Electrónico</label>
+                            <input type="email" name="email" class="form-control" placeholder="correo@ejemplo.com" required autofocus>
+                        </div>
+                        <button type="submit" class="btn-elite"><i class="bi bi-search me-2"></i> Consultar Estado</button>
+                    </form>
+                {% else %}
+                    {% if solicitud.estado == 'APROBADA' and solicitud.contrasena_temporal %}
+                        <div class="alert alert-success border-0 rounded-4 text-center bg-success bg-opacity-10">
+                            <h5 class="fw-bold text-success"><i class="bi bi-check-circle-fill me-2"></i> Solicitud Aprobada</h5>
+                            <p class="text-white-50 mb-1">Tu contraseña temporal es:</p>
+                            <div class="code-display">{{ solicitud.contrasena_temporal }}</div>
+                            <p class="mt-3 small mb-0 text-white-50">
+                                <i class="bi bi-info-circle me-1"></i> Inicia sesión con esta contraseña y cámbiala inmediatamente.
+                            </p>
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{% url 'login' %}" class="btn-elite" style="text-decoration:none;display:inline-block;">
+                                <i class="bi bi-box-arrow-in-right me-2"></i> Iniciar Sesión
+                            </a>
+                        </div>
+                    {% elif solicitud.estado == 'RECHAZADA' %}
+                        <div class="alert alert-danger border-0 rounded-4 text-center bg-danger bg-opacity-10">
+                            <h5 class="fw-bold text-danger"><i class="bi bi-x-circle-fill me-2"></i> Solicitud Rechazada</h5>
+                            <p class="text-white-50 mb-1">Motivo:</p>
+                            <div class="p-3 bg-white bg-opacity-10 rounded-3 text-white fw-bold mb-2">{{ solicitud.motivo_rechazo|default:"No se especificó motivo." }}</div>
+                            <p class="small mb-0 text-white-50">{{ solicitud.fecha_solicitud|date:"d/m/Y H:i" }}</p>
+                        </div>
+                        <a href="{% url 'solicitar_cambio_contrasena' %}" class="btn btn-outline-light btn-sm w-100 fw-bold rounded-pill py-2 mt-2">
+                            <i class="bi bi-send me-2"></i> Enviar nueva solicitud
+                        </a>
+                    {% elif solicitud %}
+                        <div class="text-center">
+                            <div class="d-flex justify-content-between align-items-center mb-2 p-3 bg-white bg-opacity-10 rounded-3">
+                                <span class="text-white fw-bold small">{{ solicitud.fecha_solicitud|date:"d/m/Y H:i" }}</span>
+                                <span class="badge bg-warning rounded-pill">{{ solicitud.get_estado_display }}</span>
+                            </div>
+                            <p class="text-white-50 small">Espera a que el administrador apruebe tu solicitud.</p>
+                        </div>
+                    {% else %}
+                        <div class="text-center">
+                            <p class="text-white-50">No hay solicitudes registradas para este correo.</p>
+                            <a href="{% url 'solicitar_cambio_contrasena' %}" class="btn btn-outline-light btn-sm w-100 fw-bold rounded-pill py-2 mt-2">
+                                <i class="bi bi-send me-2"></i> Enviar nueva solicitud
+                            </a>
+                        </div>
+                    {% endif %}
+                    <div class="text-center mt-4 pt-3 border-top border-secondary border-opacity-25">
+                        <a href="{% url 'verificar_solicitud_contrasena' %}" class="text-gold text-decoration-none small fw-bold">
+                            <i class="bi bi-person me-1"></i> Consultar otro correo
+                        </a>
+                        <span class="text-white-50 mx-2">|</span>
+                        <a href="{% url 'login' %}" class="text-white-50 text-decoration-none small">
+                            Iniciar sesión
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="right-side">
+            <div class="overlay-text px-5">
+                <h1>FORJANDO EL FUTURO.<br>INSPIRANDO GRANDEZA.<br><span class="text-gold">SOMOS ADEMEBA.</span></h1>
+                <p class="fs-5 text-white-50 mt-3">Asociación Deportiva Mexicana de Basquetbol - Oaxaca</p>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

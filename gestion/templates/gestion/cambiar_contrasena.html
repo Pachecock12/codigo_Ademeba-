@@ -1,0 +1,44 @@
+{% extends 'gestion/base_dashboard.html' %}
+{% block header_title %}Cambiar Contraseña{% endblock %}
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0">Cambiar Contraseña</h4>
+            <p class="text-muted small mb-0">Actualiza tu contraseña de acceso al sistema.</p>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} fw-bold shadow-sm border-0 rounded-4">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">Contraseña Actual</label>
+                        <input type="password" name="actual" class="form-control" placeholder="Ingresa tu contraseña actual" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">Nueva Contraseña</label>
+                        <input type="password" name="nueva" class="form-control" placeholder="Mínimo 8 caracteres" required>
+                        <small class="text-muted">Mínimo 8 caracteres. Al menos una mayúscula y un número.</small>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-muted">Confirmar Nueva Contraseña</label>
+                        <input type="password" name="confirmar" class="form-control" placeholder="Repite la nueva contraseña" required>
+                    </div>
+                    <button type="submit" class="btn btn-dark fw-bold rounded-pill px-5 w-100">
+                        <i class="bi bi-check-lg me-2"></i> Actualizar Contraseña
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
