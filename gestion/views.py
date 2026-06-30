@@ -259,6 +259,10 @@ def registrar_jugador_equipo(peticion, equipo_id):
 
             messages.success(peticion, f'Registro enviado al equipo {equipo.club}. Se ha generado un adeudo de inscripción de ${costo:.2f}.')
             return redirect('dashboard')
+        else:
+            for field, errores in form.errors.items():
+                for error in errores:
+                    messages.error(peticion, f'{field}: {error}')
     else:
         form = HijoForm()
     return render(peticion, 'gestion/registrar_jugador_equipo.html', {'form': form, 'equipo': equipo, 'jugadores_activos': jugadores_activos, 'config': config})
@@ -380,6 +384,11 @@ def gestionar_equipo(peticion, equipo_id):
                 nuevo_staff.save()
                 messages.success(peticion, 'Miembro del cuerpo técnico agregado.')
                 return redirect('gestionar_equipo', equipo_id=equipo_actual.id)
+            else:
+                for field, errores in formulario_staff.errors.items():
+                    for error in errores:
+                        messages.error(peticion, f'{field}: {error}')
+                abrir_modal_staff = True
             
         elif 'btn_jugador' in peticion.POST and peticion.user.is_staff:
             formulario_jugador = JugadorForm(peticion.POST, peticion.FILES)
@@ -404,6 +413,11 @@ def gestionar_equipo(peticion, equipo_id):
                 
                 messages.success(peticion, 'Jugador registrado, añadido al equipo y adeudo generado en finanzas.')
                 return redirect('gestionar_equipo', equipo_id=equipo_actual.id)
+            else:
+                for field, errores in formulario_jugador.errors.items():
+                    for error in errores:
+                        messages.error(peticion, f'{field}: {error}')
+                abrir_modal_jugador = True
 
         elif 'btn_vincular_curp' in peticion.POST:
             curp = peticion.POST.get('curp_busqueda', '').strip().upper()
