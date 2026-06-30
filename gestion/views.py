@@ -243,22 +243,26 @@ def registrar_jugador_equipo(peticion, equipo_id):
     if peticion.method == 'POST':
         form = HijoForm(peticion.POST, peticion.FILES)
         if form.is_valid():
-            hijo = form.save(commit=False)
-            hijo.tutor = peticion.user
-            hijo.equipo = equipo 
-            hijo.estado_validacion = 'PENDIENTE'
-            hijo.save()
-            HistorialEquipo.objects.create(jugador=hijo, equipo=equipo, motivo="Ingreso al registrarse")
+            try:
+                hijo = form.save(commit=False)
+                hijo.tutor = peticion.user
+                hijo.equipo = equipo 
+                hijo.estado_validacion = 'PENDIENTE'
+                hijo.save()
+                HistorialEquipo.objects.create(jugador=hijo, equipo=equipo, motivo="Ingreso al registrarse")
 
-            concepto_pago = f"Inscripción - {hijo.nombres} {hijo.apellido_paterno}"
-            costo = config.costo_inscripcion if config and config.costo_inscripcion else 0.00
-            Adeudo.objects.get_or_create(
-                tutor=peticion.user, equipo=equipo, jugador=hijo, concepto=concepto_pago,
-                defaults={'monto': costo, 'tipo_adeudo': 'INSCRIPCION', 'estado': 'PENDIENTE'}
-            )
+                concepto_pago = f"Inscripción - {hijo.nombres} {hijo.apellido_paterno}"
+                costo = config.costo_inscripcion if config and config.costo_inscripcion else 0.00
+                Adeudo.objects.get_or_create(
+                    tutor=peticion.user, equipo=equipo, jugador=hijo, concepto=concepto_pago,
+                    defaults={'monto': costo, 'tipo_adeudo': 'INSCRIPCION', 'estado': 'PENDIENTE'}
+                )
 
-            messages.success(peticion, f'Registro enviado al equipo {equipo.club}. Se ha generado un adeudo de inscripción de ${costo:.2f}.')
-            return redirect('dashboard')
+                messages.success(peticion, f'Registro enviado al equipo {equipo.club}. Se ha generado un adeudo de inscripción de ${costo:.2f}.')
+                return redirect('dashboard')
+            except Exception as e:
+                messages.error(peticion, f'Error al guardar los archivos en el servidor. Verifica que los archivos sean válidos y que la conexión a S3 esté configurada correctamente. Detalle: {e}')
+                logger.exception("Error al registrar jugador con archivos")
         else:
             for field, errores in form.errors.items():
                 for error in errores:
