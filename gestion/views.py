@@ -708,6 +708,14 @@ def lista_entrenadores(peticion):
                 form_entrenador.save()
                 messages.success(peticion, '¡Cuenta de entrenador creada exitosamente!')
                 return redirect('lista_entrenadores')
+            else:
+                for field, errores in form_entrenador.errors.items():
+                    for error in errores:
+                        if field == '__all__':
+                            messages.error(peticion, f'{error}')
+                        else:
+                            label = form_entrenador.fields[field].label or field
+                            messages.error(peticion, f'{label}: {error}')
     else: 
         form_entrenador = RegistroEntrenadorForm()
         

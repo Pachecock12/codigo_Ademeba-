@@ -191,22 +191,23 @@ class SolicitudCambioForm(forms.ModelForm):
         fields = ['equipo_destino']
         widgets = {'equipo_destino': forms.Select(attrs={'class': 'form-select', 'required': True})}
 
-class RegistroEntrenadorForm(UserCreationForm):
+class RegistroEntrenadorForm(forms.Form):
+    username = forms.CharField(max_length=20, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre de usuario'}), help_text='Máximo 20 caracteres. Solo letras y números.')
     first_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre(s)'}))
     last_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Apellidos'}))
-    class Meta:
-        model = User
-        fields = ['username', 'first_name', 'last_name']
-        
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['username'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Nombre de usuario'})
-        self.fields['username'].help_text = 'Máximo 20 caracteres. Solo letras y números.'
-        self.fields['password1'].widget.attrs.update({'class': 'form-control', 'placeholder': '••••••••'})
-        self.fields['password2'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Repite la contraseña'})
+    password = forms.CharField(max_length=128, required=True, widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': '••••••••'}), label='Contraseña')
+    password_confirm = forms.CharField(max_length=128, required=True, widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Repite la contraseña'}), label='Confirmar contraseña')
 
-    def clean_password1(self):
-        password = self.cleaned_data.get('password1')
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if not re.match(r'^[a-zA-Z0-9]+$', username):
+            raise forms.ValidationError("Solo se permiten letras y números.")
+        if User.objects.filter(username__iexact=username).exists():
+            raise forms.ValidationError("Ese nombre de usuario ya está en uso.")
+        return username
+
+    def clean_password(self):
+        password = self.cleaned_data.get('password')
         if len(password) < 8:
             raise forms.ValidationError("La contraseña debe tener al menos 8 caracteres.")
         if not re.search(r'[A-Z]', password):
@@ -215,29 +216,33 @@ class RegistroEntrenadorForm(UserCreationForm):
             raise forms.ValidationError("La contraseña debe contener al menos un número.")
         return password
 
-    def clean_username(self):
-        username = self.cleaned_data.get('username')
-        if username and len(username) > 20:
-            raise forms.ValidationError("Máximo 20 caracteres.")
-        if username and not re.match(r'^[a-zA-Z0-9]+$', username):
-            raise forms.ValidationError("Solo se permiten letras y números.")
-        return username
-
     def clean_first_name(self):
         nombre = self.cleaned_data.get('first_name')
-        if nombre and len(nombre) > 30:
-            raise forms.ValidationError("Máximo 30 caracteres.")
-        if nombre and not re.match(r'^[a-zA-ZáéíóúñÑÁÉÍÓÚ\s]+$', nombre):
+        if not re.match(r'^[a-zA-ZáéíóúñÑÁÉÍÓÚ\s]+$', nombre):
             raise forms.ValidationError("Solo se permiten letras.")
         return nombre
 
     def clean_last_name(self):
         apellido = self.cleaned_data.get('last_name')
-        if apellido and len(apellido) > 30:
-            raise forms.ValidationError("Máximo 30 caracteres.")
-        if apellido and not re.match(r'^[a-zA-ZáéíóúñÑÁÉÍÓÚ\s]+$', apellido):
+        if not re.match(r'^[a-zA-ZáéíóúñÑÁÉÍÓÚ\s]+$', apellido):
             raise forms.ValidationError("Solo se permiten letras.")
         return apellido
+
+    def clean(self):
+        cd = super().clean()
+        if cd.get('password') and cd.get('password_confirm') and cd['password'] != cd['password_confirm']:
+            raise forms.ValidationError("Las contraseñas no coinciden.")
+        return cd
+
+    def save(self):
+        user = User(
+            username=self.cleaned_data['username'],
+            first_name=self.cleaned_data['first_name'],
+            last_name=self.cleaned_data['last_name'],
+        )
+        user.set_password(self.cleaned_data['password'])
+        user.save()
+        return user
 
 def validar_curp_adulto(curp, instance, required=True):
     if not curp:
