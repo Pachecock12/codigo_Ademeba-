@@ -33,7 +33,13 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
-SITE_URL = os.getenv('SITE_URL', 'http://127.0.0.1:8000')
+SITE_URL = os.getenv('SITE_URL', '')
+if not SITE_URL:
+    railway_url = os.getenv('RAILWAY_STATIC_URL') or os.getenv('RAILWAY_PUBLIC_DOMAIN', '')
+    if railway_url:
+        SITE_URL = f"https://{railway_url}"
+    else:
+        SITE_URL = 'http://127.0.0.1:8000'
 
 
 INSTALLED_APPS = [

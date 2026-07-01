@@ -7,6 +7,7 @@ from django.urls import reverse
 import qrcode
 import uuid
 import os
+import hashlib
 from io import BytesIO
 from django.core.files import File
 from PIL import Image
@@ -114,17 +115,20 @@ class Jugador(models.Model):
 
         ruta_valida = reverse('validar_jugador_qr', args=[self.id])
         qr_url_esperada = f"{settings.SITE_URL}{ruta_valida}"
+        url_hash = hashlib.md5(qr_url_esperada.encode()).hexdigest()[:8]
+        qr_filename = f'qr_{self.curp}_{url_hash}.png'
+
         qr_falta = self.codigo_qr and not self.codigo_qr.storage.exists(self.codigo_qr.name)
-        if not self.codigo_qr or es_nuevo or qr_falta:
-            qr_content = qr_url_esperada
+        qr_desactualizado = self.codigo_qr and self.codigo_qr.name != f'jugadores/qrs/{qr_filename}'
+        if not self.codigo_qr or es_nuevo or qr_falta or qr_desactualizado:
             qr = qrcode.QRCode(version=1, box_size=10, border=5)
-            qr.add_data(qr_content)
+            qr.add_data(qr_url_esperada)
             qr.make(fit=True)
             img = qr.make_image(fill_color="black", back_color="white")
             buffer = BytesIO()
             img.save(buffer, format='PNG')
-            
-            self.codigo_qr.save(f'qr_{self.curp}.png', File(buffer), save=False)
+
+            self.codigo_qr.save(qr_filename, File(buffer), save=False)
             super().save(update_fields=['codigo_qr'])
 
     @property
