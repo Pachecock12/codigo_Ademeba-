@@ -33,9 +33,11 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
-SITE_URL = os.getenv('SITE_URL', '')
-if not SITE_URL:
-    railway_url = os.getenv('RAILWAY_STATIC_URL') or os.getenv('RAILWAY_PUBLIC_DOMAIN', '')
+raw_url = os.getenv('SITE_URL', '').strip()
+if raw_url:
+    SITE_URL = raw_url.rstrip('/')
+else:
+    railway_url = (os.getenv('RAILWAY_STATIC_URL') or os.getenv('RAILWAY_PUBLIC_DOMAIN', '')).strip()
     if railway_url:
         SITE_URL = f"https://{railway_url}"
     else:
