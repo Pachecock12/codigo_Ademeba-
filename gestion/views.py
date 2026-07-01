@@ -10,7 +10,7 @@ from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.models import User
 from django.db.models import Q, Sum, Count
 from .forms import JugadorForm, MiembroStaffForm, HijoForm, RegistroTutorForm, EquipoForm, RegistroEntrenadorForm, AdeudoForm, TemporadaForm, TemporadaEditForm, RosterForm, PartidoForm, ResultadoForm, SancionForm, SolicitudCambioForm, VoucherForm, ConfiguracionSistemaForm, SolicitudCambioContrasenaForm, EntrenadorPerfilForm, ResetPasswordForm, EditarCuentaEntrenadorForm
-from .models import Jugador, Equipo, MiembroStaff, HistorialEquipo, PerfilTutor, PerfilEntrenador, Adeudo, Temporada, InscripcionTorneo, Partido, Sancion, SolicitudCambioEquipo, ConfiguracionSistema, SolicitudCambioContrasena
+from .models import Jugador, Equipo, MiembroStaff, HistorialEquipo, PerfilTutor, PerfilEntrenador, Adeudo, Temporada, InscripcionTorneo, Partido, Sancion, SolicitudCambioEquipo, ConfiguracionSistema, SolicitudCambioContrasena, Reembolso
 from datetime import date
 from django.http import HttpResponse
 from django.conf import settings
@@ -1905,3 +1905,82 @@ def mis_jugadores(peticion):
         j.multas_impagas = [a for a in j.adeudos_jugador.all() if a.tipo_adeudo == 'MULTA' and not a.pagado]
         j.total_multas = sum(a.monto for a in j.multas_impagas)
     return render(peticion, 'gestion/mis_jugadores.html', {'jugadores': jugadores_lista})
+
+
+# =========================================================
+# MÓDULO DE REEMBOLSOS
+# =========================================================
+
+@login_required
+def solicitar_reembolso(peticion, jugador_id):
+    jugador = get_object_or_404(Jugador, id=jugador_id, tutor=peticion.user)
+    if jugador.estado_validacion != 'RECHAZADO':
+        messages.error(peticion, 'Solo puedes solicitar reembolso si tu jugador fue rechazado.')
+        return redirect('dashboard')
+
+    adeudo_pagado = Adeudo.objects.filter(
+        jugador=jugador, tipo_adeudo='INSCRIPCION', pagado=True
+    ).first()
+
+    if not adeudo_pagado:
+        messages.error(peticion, 'No hay un pago registrado para este jugador. No es necesario solicitar reembolso.')
+        return redirect('dashboard')
+
+    if Reembolso.objects.filter(jugador=jugador, procesado=False).exists():
+        messages.warning(peticion, 'Ya tienes una solicitud de reembolso activa para este jugador.')
+        return redirect('dashboard')
+
+    if peticion.method == 'POST':
+        banco = peticion.POST.get('banco', '').strip()
+        numero_cuenta = peticion.POST.get('numero_cuenta', '').strip()
+        titular = peticion.POST.get('titular', '').strip()
+        if not banco or not numero_cuenta or not titular:
+            messages.error(peticion, 'Todos los campos bancarios son obligatorios.')
+        else:
+            Reembolso.objects.create(
+                jugador=jugador, tutor=peticion.user, adeudo=adeudo_pagado,
+                banco=banco, numero_cuenta=numero_cuenta, titular=titular,
+                monto=adeudo_pagado.monto,
+            )
+            messages.success(peticion, f'Solicitud de reembolso enviada. Te contactaremos para devolver ${adeudo_pagado.monto}.')
+            return redirect('dashboard')
+
+    bancos_sugeridos = ['BBVA', 'Santander', 'Banamex', 'Banorte', 'HSBC', 'Scotiabank', 'Azteca', 'Bancoppel', 'Afirme', 'Interacciones']
+    return render(peticion, 'gestion/solicitar_reembolso.html', {
+        'jugador': jugador, 'adeudo': adeudo_pagado, 'bancos_sugeridos': bancos_sugeridos,
+    })
+
+
+@login_required
+@user_passes_test(admin_o_secre_check)
+def panel_reembolsos(peticion):
+    pendientes = Reembolso.objects.filter(procesado=False).select_related('jugador', 'tutor', 'adeudo').order_by('-fecha_solicitud')
+    procesados = Reembolso.objects.filter(procesado=True).select_related('jugador', 'tutor', 'adeudo').order_by('-fecha_procesado')[:20]
+    return render(peticion, 'gestion/panel_reembolsos.html', {
+        'pendientes': pendientes, 'procesados': procesados,
+        'es_admin_secre': True,
+    })
+
+
+@login_required
+@user_passes_test(admin_o_secre_check)
+def procesar_reembolso(peticion, pk):
+    reembolso = get_object_or_404(Reembolso, pk=pk)
+    if reembolso.procesado:
+        messages.warning(peticion, 'Este reembolso ya fue procesado.')
+        return redirect('panel_reembolsos')
+
+    reembolso.procesado = True
+    reembolso.fecha_procesado = timezone.now()
+    reembolso.save()
+
+    adeudo = reembolso.adeudo
+    if adeudo:
+        adeudo.estado = 'PENDIENTE'
+        adeudo.pagado = False
+        adeudo.voucher_comprobante = None
+        adeudo.fecha_pago = None
+        adeudo.save()
+
+    messages.success(peticion, f'Reembolso de ${reembolso.monto} marcado como procesado.')
+    return redirect('panel_reembolsos')

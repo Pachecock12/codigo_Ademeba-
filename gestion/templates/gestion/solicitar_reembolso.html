@@ -1,0 +1,69 @@
+{% extends 'gestion/base_dashboard.html' %}
+{% load static %}
+
+{% block header_title %}Solicitar Reembolso{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="bg-danger text-white p-4 text-center">
+                    <i class="bi bi-cash-stack display-4 mb-2 d-block"></i>
+                    <h4 class="fw-bold mb-0">Solicitar Reembolso</h4>
+                </div>
+
+                <div class="card-body p-4">
+                    <div class="alert alert-warning border-0 rounded-3 mb-4">
+                        <h6 class="fw-bold mb-1"><i class="bi bi-info-circle me-1"></i> Documentos Rechazados</h6>
+                        <p class="small mb-0">Tu jugador <strong>{{ jugador.nombres }} {{ jugador.apellido_paterno }}</strong> fue rechazado. Como ya realizaste el pago de inscripción, puedes solicitar la devolución de tu dinero.</p>
+                    </div>
+
+                    {% if adeudo %}
+                    <div class="alert alert-light border rounded-3 mb-4">
+                        <h6 class="fw-bold text-muted mb-1">CARGO REGISTRADO</h6>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">{{ adeudo.concepto }}</span>
+                            <span class="fs-4 fw-bold text-danger">${{ adeudo.monto }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold"><i class="bi bi-bank me-1"></i> Banco</label>
+                            <select name="banco" class="form-control form-select" required>
+                                <option value="">Selecciona tu banco...</option>
+                                {% for b in bancos_sugeridos %}
+                                <option value="{{ b }}">{{ b }}</option>
+                                {% endfor %}
+                                <option value="OTRO">Otro</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold"><i class="bi bi-credit-card me-1"></i> Número de cuenta / CLABE</label>
+                            <input type="text" name="numero_cuenta" class="form-control" placeholder="Ej: 123456789012345678" required maxlength="30" pattern="[0-9]{10,20}" title="Solo números, 10-20 dígitos">
+                            <div class="form-text small">CLABE interbancaria de 18 dígitos para transferencia.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold"><i class="bi bi-person me-1"></i> Nombre del titular de la cuenta</label>
+                            <input type="text" name="titular" class="form-control" placeholder="Nombre completo del titular" required>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger fw-bold rounded-pill py-3 shadow-sm">
+                                <i class="bi bi-send-fill me-1"></i> Enviar Solicitud de Reembolso
+                            </button>
+                            <a href="{% url 'dashboard' %}" class="btn btn-light fw-bold rounded-pill py-2">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

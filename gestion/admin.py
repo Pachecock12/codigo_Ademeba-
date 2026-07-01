@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
-from .models import Equipo, Jugador, Sancion, Adeudo, ConfiguracionSistema, SolicitudCambioContrasena
+from .models import Equipo, Jugador, Sancion, Adeudo, ConfiguracionSistema, SolicitudCambioContrasena, Reembolso
 
 admin.site.unregister(User)
 @admin.register(User)
@@ -60,3 +60,10 @@ class SolicitudCambioContrasenaAdmin(admin.ModelAdmin):
     search_fields = ['usuario__username', 'usuario__email']
     readonly_fields = ['fecha_solicitud', 'contrasena_temporal']
 admin.site.register(SolicitudCambioContrasena, SolicitudCambioContrasenaAdmin)
+
+@admin.register(Reembolso)
+class ReembolsoAdmin(admin.ModelAdmin):
+    list_display = ['jugador', 'tutor', 'banco', 'monto', 'fecha_solicitud', 'procesado']
+    list_filter = ['procesado', 'banco']
+    search_fields = ['jugador__nombres', 'jugador__apellido_paterno', 'tutor__username', 'titular']
+    readonly_fields = ['fecha_solicitud', 'fecha_procesado']

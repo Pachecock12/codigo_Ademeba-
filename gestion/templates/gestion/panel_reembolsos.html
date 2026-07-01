@@ -1,0 +1,102 @@
+{% extends 'gestion/base_dashboard.html' %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0 text-dark"><i class="bi bi-cash-stack text-success me-2"></i> Solicitudes de Reembolso</h4>
+            <small class="text-muted">Administra las devoluciones por jugadores rechazados.</small>
+        </div>
+    </div>
+
+    <!-- PENDIENTES -->
+    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-clock-history text-warning me-2"></i> Pendientes ({{ pendientes|length }})</h5>
+    <div class="card shadow-sm border-0 rounded-4 mb-5">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">JUGADOR</th>
+                        <th>TUTOR</th>
+                        <th>BANCO</th>
+                        <th>CUENTA</th>
+                        <th>TITULAR</th>
+                        <th>MONTO</th>
+                        <th>FECHA</th>
+                        <th class="text-end pe-4">ACCIÓN</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in pendientes %}
+                    <tr>
+                        <td class="ps-4">
+                            <a href="{% url 'perfil_jugador' r.jugador.id %}" class="fw-bold text-dark text-decoration-none">
+                                {{ r.jugador.nombres }} {{ r.jugador.apellido_paterno }}
+                            </a>
+                        </td>
+                        <td>{{ r.tutor.get_full_name|default:r.tutor.username }}</td>
+                        <td>{{ r.banco }}</td>
+                        <td><code>{{ r.numero_cuenta }}</code></td>
+                        <td>{{ r.titular }}</td>
+                        <td class="fw-bold text-danger">${{ r.monto }}</td>
+                        <td class="small text-muted">{{ r.fecha_solicitud|date:"d/m/Y H:i" }}</td>
+                        <td class="text-end pe-4">
+                            <form method="post" action="{% url 'procesar_reembolso' r.id %}" onsubmit="return confirm('¿Marcar este reembolso como procesado? Se eliminará el comprobante de pago.')">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success btn-sm rounded-pill fw-bold px-3">
+                                    <i class="bi bi-check-lg me-1"></i> Marcar Procesado
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4 border-0">
+                            <i class="bi bi-emoji-smile fs-3 d-block mb-2 text-success"></i>
+                            No hay solicitudes de reembolso pendientes.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PROCESADOS -->
+    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-check-circle-fill text-success me-2"></i> Procesados (últimos 20)</h5>
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4">JUGADOR</th>
+                        <th>TUTOR</th>
+                        <th>BANCO</th>
+                        <th>MONTO</th>
+                        <th>SOLICITADO</th>
+                        <th>PROCESADO</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in procesados %}
+                    <tr>
+                        <td class="ps-4">{{ r.jugador.nombres }} {{ r.jugador.apellido_paterno }}</td>
+                        <td>{{ r.tutor.get_full_name|default:r.tutor.username }}</td>
+                        <td>{{ r.banco }}</td>
+                        <td class="fw-bold text-success">${{ r.monto }}</td>
+                        <td class="small text-muted">{{ r.fecha_solicitud|date:"d/m/Y" }}</td>
+                        <td class="small text-muted">{{ r.fecha_procesado|date:"d/m/Y H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4 border-0">
+                            Aún no hay reembolsos procesados.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

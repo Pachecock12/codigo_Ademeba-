@@ -112,6 +112,11 @@
                                     {% if j.estado_validacion == 'RECHAZADO' %}DOCUMENTOS RECHAZADOS{% else %}ATENCIÓN:{% endif %}
                                 </h6>
                                 <span class="text-dark">{{ j.semaforo.mensaje }}</span>
+                                {% if j.estado_validacion == 'RECHAZADO' and j.motivo_rechazo %}
+                                    <div class="bg-white bg-opacity-50 rounded-3 p-2 mt-2 border-0 fw-bold small">
+                                        <i class="bi bi-chat-quote-fill me-1 text-danger"></i> Motivo: {{ j.motivo_rechazo }}
+                                    </div>
+                                {% endif %}
                             </div>
                         {% endif %}
 
@@ -133,6 +138,12 @@
                             <a href="{% url 'perfil_jugador' j.id %}" class="btn btn-dark fw-bold rounded-pill shadow-sm py-2">
                                 <i class="bi bi-person-lines-fill me-1"></i> Ver Perfil
                             </a>
+
+                            {% if j.estado_validacion == 'RECHAZADO' and j.tiene_pago_inscripcion and not j.tiene_solicitud_reembolso_pendiente %}
+                                <a href="{% url 'solicitar_reembolso' j.id %}" class="btn btn-outline-danger fw-bold rounded-pill shadow-sm py-2">
+                                    <i class="bi bi-cash-stack me-1"></i> Solicitar Reembolso
+                                </a>
+                            {% endif %}
 
                             {% if j.activo %}
                                 {% if j.estado_validacion != 'APROBADO' %}

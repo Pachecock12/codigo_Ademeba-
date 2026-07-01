@@ -209,6 +209,14 @@ class Jugador(models.Model):
         return nombres
 
     @property
+    def tiene_pago_inscripcion(self):
+        return self.adeudos_jugador.filter(tipo_adeudo='INSCRIPCION', pagado=True).exists()
+
+    @property
+    def tiene_solicitud_reembolso_pendiente(self):
+        return self.reembolsos.filter(procesado=False).exists()
+
+    @property
     def torneos_activos(self):
         hoy = date.today()
         return [ins for ins in self.torneos_participados.all()
@@ -493,6 +501,27 @@ class SolicitudCambioContrasena(models.Model):
 
     def __str__(self):
         return f"{self.usuario.username} - {self.get_estado_display()}"
+
+
+class Reembolso(models.Model):
+    jugador = models.ForeignKey(Jugador, on_delete=models.CASCADE, related_name='reembolsos')
+    tutor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='solicitudes_reembolso')
+    adeudo = models.ForeignKey(Adeudo, on_delete=models.SET_NULL, null=True, blank=True, related_name='reembolsos')
+    banco = models.CharField(max_length=100, verbose_name="Banco")
+    numero_cuenta = models.CharField(max_length=30, verbose_name="Número de cuenta / CLABE")
+    titular = models.CharField(max_length=200, verbose_name="Nombre del titular")
+    monto = models.DecimalField(max_digits=8, decimal_places=2, default=0.00, verbose_name="Monto a reembolsar")
+    fecha_solicitud = models.DateTimeField(auto_now_add=True)
+    procesado = models.BooleanField(default=False, verbose_name="Reembolso procesado")
+    fecha_procesado = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Solicitud de Reembolso"
+        verbose_name_plural = "Solicitudes de Reembolso"
+        ordering = ['-fecha_solicitud']
+
+    def __str__(self):
+        return f"Reembolso {self.jugador.nombres} - ${self.monto}"
 
 
 # ==============================================================================

@@ -109,6 +109,11 @@ urlpatterns = [
     path('jugador/<int:pk>/credencial/pdf/', views.generar_credencial_pdf, name='credencial_jugador_pdf'),
     path('jugador/<int:pk>/credencial/', views.credencial_jugador, name='credencial_jugador'),
     path('valida/jugador/<int:pk>/', views.validar_jugador_qr, name='validar_jugador_qr'),
+
+    # --- MÓDULO DE REEMBOLSOS ---
+    path('jugador/<int:jugador_id>/reembolso/', views.solicitar_reembolso, name='solicitar_reembolso'),
+    path('administracion/reembolsos/', views.panel_reembolsos, name='panel_reembolsos'),
+    path('administracion/reembolsos/<int:pk>/procesar/', views.procesar_reembolso, name='procesar_reembolso'),
 ]
 
 # Servir archivos multimedia (funciona incluso con DEBUG=False en Railway)
