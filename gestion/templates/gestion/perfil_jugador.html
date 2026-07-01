@@ -63,6 +63,13 @@
                             <span class="badge bg-warning text-dark w-100 py-3 mb-2 rounded-pill shadow-sm fs-6"><i class="bi bi-hourglass-split me-1"></i> Pendiente Revisión</span>
                         {% endif %}
                     {% endif %}
+
+                    {% if jugador.estado_validacion == 'RECHAZADO' and jugador.motivo_rechazo %}
+                    <div class="alert alert-danger p-3 mt-2 mb-0 border-0 shadow-sm rounded-3 fw-bold text-start">
+                        <h6 class="fw-bold text-danger mb-1"><i class="bi bi-x-circle-fill me-2"></i> MOTIVO DEL RECHAZO</h6>
+                        <p class="text-dark mb-0 small">{{ jugador.motivo_rechazo }}</p>
+                    </div>
+                    {% endif %}
                     
                     {% if jugador.estado_validacion != 'APROBADO' %}
                         {% if es_admin_secre %}

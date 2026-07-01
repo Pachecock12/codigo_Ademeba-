@@ -1,6 +1,8 @@
+import logging
+
 from django.db import models
 from django.contrib.auth.models import User
-from django.db.models.signals import post_delete, pre_save
+from django.db.models.signals import post_delete, pre_save, post_save
 from django.dispatch import receiver
 from django.conf import settings
 from django.urls import reverse
@@ -13,6 +15,32 @@ from django.core.files import File
 from PIL import Image
 from datetime import date
 from django.utils import timezone
+
+logger = logging.getLogger(__name__)
+
+
+def convertir_imagen_a_webp(archivo_field):
+    """Convierte una imagen subida a WebP para reducir peso. Retorna True si convirtió."""
+    if not archivo_field or not archivo_field.name:
+        return False
+    ext = os.path.splitext(archivo_field.name)[1].lower()
+    if ext in ('.webp', '.pdf'):
+        return False
+    try:
+        img = Image.open(archivo_field)
+        if img.mode in ('RGBA', 'LA') or (img.mode == 'P' and 'transparency' in img.info):
+            img = img.convert('RGBA')
+        else:
+            img = img.convert('RGB')
+        buffer = BytesIO()
+        img.save(buffer, format='WEBP', quality=80, optimize=True)
+        webp_name = os.path.splitext(archivo_field.name)[0] + '.webp'
+        archivo_field.save(webp_name, File(buffer), save=False)
+        return True
+    except Exception as e:
+        logger.exception(f"Error al convertir imagen a WebP: {e}")
+        return False
+
 
 REGIONES = [
     ('Valles Centrales', 'Valles Centrales'), 
@@ -113,6 +141,9 @@ class Jugador(models.Model):
         es_nuevo = self.pk is None
         super().save(*args, **kwargs)
 
+        campos_actualizar = []
+
+        # --- QR Code ---
         ruta_valida = reverse('validar_jugador_qr', args=[self.id])
         qr_url_esperada = f"{settings.SITE_URL}{ruta_valida}"
         url_hash = hashlib.md5(qr_url_esperada.encode()).hexdigest()[:8]
@@ -129,7 +160,16 @@ class Jugador(models.Model):
             img.save(buffer, format='PNG')
 
             self.codigo_qr.save(qr_filename, File(buffer), save=False)
-            super().save(update_fields=['codigo_qr'])
+            campos_actualizar.append('codigo_qr')
+
+        # --- WebP conversion ---
+        if self.foto_perfil and self.foto_perfil.name:
+            ext = os.path.splitext(self.foto_perfil.name)[1].lower()
+            if ext not in ('.webp', '.pdf') and convertir_imagen_a_webp(self.foto_perfil):
+                campos_actualizar.append('foto_perfil')
+
+        if campos_actualizar:
+            super().save(update_fields=campos_actualizar)
 
     @property
     def semaforo(self):
@@ -501,3 +541,70 @@ def auto_eliminar_archivos_viejos_jugador(sender, instance, **kwargs):
         new_file = getattr(instance, campo)
         if old_file and new_file and old_file != new_file:
             borrar_archivo_fisico(old_file)
+
+
+# ==============================================================================
+# WEBP: Conversión automática de imágenes a WebP
+# ==============================================================================
+
+_convirtiendo_webp = set()
+
+
+def _convertir_campo_webp(instance, field_name):
+    """Convierte un campo ImageField a WebP y actualiza la instancia."""
+    archivo = getattr(instance, field_name, None)
+    if not archivo or not archivo.name:
+        return False
+    ext = os.path.splitext(archivo.name)[1].lower()
+    if ext in ('.webp', '.pdf'):
+        return False
+    try:
+        img = Image.open(archivo)
+        if img.mode in ('RGBA', 'LA') or (img.mode == 'P' and 'transparency' in img.info):
+            img = img.convert('RGBA')
+        else:
+            img = img.convert('RGB')
+        buffer = BytesIO()
+        img.save(buffer, format='WEBP', quality=80, optimize=True)
+        webp_name = os.path.splitext(archivo.name)[0] + '.webp'
+        archivo.save(webp_name, File(buffer), save=False)
+        return True
+    except Exception as e:
+        logger.exception(f"Error al convertir {field_name} a WebP: {e}")
+        return False
+
+
+@receiver(post_save, sender=Equipo)
+def convertir_logo_equipo_webp(sender, instance, **kwargs):
+    if instance.pk in _convirtiendo_webp:
+        return
+    _convirtiendo_webp.add(instance.pk)
+    try:
+        if _convertir_campo_webp(instance, 'logo'):
+            instance.save(update_fields=['logo'])
+    finally:
+        _convirtiendo_webp.discard(instance.pk)
+
+
+@receiver(post_save, sender=MiembroStaff)
+def convertir_foto_staff_webp(sender, instance, **kwargs):
+    if instance.pk in _convirtiendo_webp:
+        return
+    _convirtiendo_webp.add(instance.pk)
+    try:
+        if _convertir_campo_webp(instance, 'foto'):
+            instance.save(update_fields=['foto'])
+    finally:
+        _convirtiendo_webp.discard(instance.pk)
+
+
+@receiver(post_save, sender=PerfilEntrenador)
+def convertir_foto_entrenador_webp(sender, instance, **kwargs):
+    if instance.pk in _convirtiendo_webp:
+        return
+    _convirtiendo_webp.add(instance.pk)
+    try:
+        if _convertir_campo_webp(instance, 'foto'):
+            instance.save(update_fields=['foto'])
+    finally:
+        _convirtiendo_webp.discard(instance.pk)
