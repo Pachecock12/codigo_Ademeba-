@@ -1031,7 +1031,7 @@ def panel_disciplina(peticion):
     historial = Sancion.objects.filter(activa=False).order_by('-fecha_sancion')[:20]
     jugadores_json = json.dumps(list(Jugador.objects.all().order_by(
         'apellido_paterno', 'nombres'
-    ).values('id', 'nombres', 'apellido_paterno', 'apellido_materno')))
+    ).values('id', 'nombres', 'apellido_paterno', 'apellido_materno', 'equipo__club')))
 
     return render(peticion, 'gestion/sanciones.html', {
         'sanciones_activas': sanciones_activas, 'historial': historial,

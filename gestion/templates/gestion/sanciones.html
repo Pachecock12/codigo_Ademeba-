@@ -217,8 +217,15 @@ document.addEventListener('DOMContentLoaded', function() {
     input.addEventListener('input', function() {
         var t = this.value.toLowerCase().trim();
         if (t.length < 1) { drop.style.display = 'none'; document.getElementById('id_jugador_hidden').value = ''; document.getElementById('jugador_seleccionado').textContent = ''; return; }
-        var f = jugadores.filter(function(j) { return j.nombre.toLowerCase().startsWith(t); }).slice(0, 10);
-        drop.innerHTML = f.length ? f.map(function(j) { return '<button type="button" class="list-group-item list-group-item-action py-1" onclick="selJugador(' + j.id + ',\'' + j.nombre.replace(/'/g,"\\'") + '\')">' + j.nombre + '</button>'; }).join('') : '<div class="list-group-item py-1 text-muted small">Sin resultados</div>';
+        var f = jugadores.filter(function(j) {
+            var full = ((j.apellido_paterno || '') + ' ' + (j.apellido_materno || '') + ' ' + (j.nombres || '')).toLowerCase().trim();
+            return full.includes(t);
+        }).slice(0, 10);
+        drop.innerHTML = f.length ? f.map(function(j) {
+            var nombre = ((j.apellido_paterno || '') + ' ' + (j.apellido_materno || '') + ' ' + (j.nombres || '')).trim();
+            var equipo = j.equipo__club ? ' <small class="text-muted">(' + j.equipo__club + ')</small>' : '';
+            return '<button type="button" class="list-group-item list-group-item-action py-2" onclick="selJugador(' + j.id + ',\'' + nombre.replace(/'/g,"\\'") + '\')">' + nombre + equipo + '</button>';
+        }).join('') : '<div class="list-group-item py-1 text-muted small">Sin resultados</div>';
         drop.style.display = 'block';
     });
     input.addEventListener('blur', function() { setTimeout(function() { drop.style.display = 'none'; }, 200); });
