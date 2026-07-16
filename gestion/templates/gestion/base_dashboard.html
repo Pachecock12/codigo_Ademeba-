@@ -415,11 +415,21 @@
 </div>
 
 <script>
+    function showLoading() {
+        document.getElementById('loading-overlay').classList.add('show');
+    }
+    function hideLoading() {
+        document.getElementById('loading-overlay').classList.remove('show');
+    }
+
+    window.addEventListener('pageshow', function() { hideLoading(); });
+
     document.addEventListener("DOMContentLoaded", function(){
+        hideLoading();
+
         const sidebarToggle = document.getElementById('sidebarToggle');
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.querySelector('.main-content');
-        const overlay = document.getElementById('loading-overlay');
 
         if(sidebarToggle){
             sidebarToggle.addEventListener('click', function(e){
@@ -429,8 +439,6 @@
                 sidebar.classList.toggle('show-mobile');
             });
         }
-
-        function showLoading() { overlay.classList.add('show'); }
 
         document.querySelectorAll('form').forEach(function(form) {
             form.addEventListener('submit', function() {
