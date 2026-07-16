@@ -47,6 +47,7 @@ urlpatterns = [
     path('administracion/finanzas/excel/<int:anio>/', views.descargar_excel_finanzas, name='descargar_excel_finanzas'),
     
     path('administracion/disciplina/', views.panel_disciplina, name='panel_disciplina'),
+    path('administracion/disciplina/eliminar/<int:pk>/', views.eliminar_sancion, name='eliminar_sancion'),
     path('disciplina/jugador/<int:jugador_id>/', views.gestion_sanciones_jugador, name='gestion_sanciones_jugador'),
     path('administracion/aprobaciones/', views.panel_aprobaciones, name='panel_aprobaciones'),
     

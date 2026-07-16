@@ -1040,6 +1040,18 @@ def panel_disciplina(peticion):
 
 
 @login_required
+@secretaria_required
+def eliminar_sancion(peticion, pk):
+    if peticion.method != 'POST':
+        return redirect('panel_disciplina')
+    sancion = get_object_or_404(Sancion, pk=pk)
+    Adeudo.objects.filter(sancion=sancion).delete()
+    sancion.delete()
+    messages.success(peticion, 'Sanción eliminada correctamente.')
+    return redirect('panel_disciplina')
+
+
+@login_required
 def gestion_sanciones_jugador(peticion, jugador_id):
     jugador = get_object_or_404(Jugador, id=jugador_id)
     equipo = jugador.equipo
