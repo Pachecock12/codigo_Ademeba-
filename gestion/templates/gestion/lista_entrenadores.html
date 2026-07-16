@@ -132,8 +132,13 @@
                                     <form action="{% url 'resetear_password' entrenador.id %}" method="POST">
                                         {% csrf_token %}
                                         <p class="text-muted small">Cambiar la clave de acceso de <strong>{{ entrenador.username }}</strong>.</p>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold small">Nueva contraseña</label>
+                                            <input type="password" name="nueva_password" class="form-control form-control-lg fw-bold rounded-3 bg-light border-0 text-center" required minlength="8" placeholder="Mínimo 8 caracteres">
+                                        </div>
                                         <div class="mb-4">
-                                            <input type="text" name="nueva_password" class="form-control form-control-lg fw-bold rounded-3 bg-light border-0 text-center" required minlength="6" placeholder="Escribe la clave">
+                                            <label class="form-label fw-bold small">Confirmar contraseña</label>
+                                            <input type="password" name="confirmar_password" class="form-control form-control-lg fw-bold rounded-3 bg-light border-0 text-center" required minlength="8" placeholder="Repite la contraseña">
                                         </div>
                                         <button type="submit" class="btn btn-dark w-100 fw-bold rounded-pill">Forzar Actualización</button>
                                     </form>

@@ -10,7 +10,7 @@
             <h3 class="fw-bold mb-0 text-dark">{{ equipo.club }} - {{ equipo.nombre }}</h3>
             <p class="text-muted small mb-0 fw-bold">Gestión Integral del Club
                 <span class="badge bg-info bg-opacity-10 text-info ms-2">
-                    <i class="bi bi-people-fill me-1"></i>{{ jugadores_varonil|length|add:jugadores_femenil|length }}/{{ equipo.max_jugadores }} jugadores
+                    <i class="bi bi-people-fill me-1"></i>{{ jugadores_varonil.count|add:jugadores_femenil.count }}/{{ equipo.max_jugadores }} jugadores
                 </span>
             </p>
         </div>

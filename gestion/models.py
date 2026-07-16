@@ -266,7 +266,7 @@ class MiembroStaff(models.Model):
     def save(self, *args, **kwargs):
         if not self.folio_afiliacion:
             year = str(timezone.now().year)[-2:]
-            iniciales = self.equipo.club[:2].upper() if self.equipo.club else "XX"
+            iniciales = self.equipo.club[:2].upper() if self.equipo and self.equipo.club else "XX"
             # SOLUCIÓN HUECO 1: Evitar colisión de folios de staff
             while True:
                 codigo_unico = uuid.uuid4().hex[:4].upper()

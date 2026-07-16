@@ -172,7 +172,8 @@ class JugadorForm(forms.ModelForm):
         except ValueError:
             raise ValidationError("La fecha incrustada en la CURP es inválida.")
             
-        edad_deportiva = date.today().year - fecha_nac.year
+        hoy = date.today()
+        edad_deportiva = hoy.year - fecha_nac.year - ((hoy.month, hoy.day) < (fecha_nac.month, fecha_nac.day))
         
         if edad_deportiva >= 18: 
             raise ValidationError(f"El jugador supera el límite de edad ({edad_deportiva} años). Debe ser estrictamente menor a 18 años.")
@@ -260,7 +261,8 @@ def validar_curp_adulto(curp, instance, required=True):
         fecha_nac = date(anio, int(fecha_str[2:4]), int(fecha_str[4:6]))
     except ValueError:
         raise ValidationError("La fecha incrustada en la CURP es inválida.")
-    edad = date.today().year - fecha_nac.year
+    hoy = date.today()
+    edad = hoy.year - fecha_nac.year - ((hoy.month, hoy.day) < (fecha_nac.month, fecha_nac.day))
     if edad < 18:
         raise ValidationError(f"La persona debe ser mayor de edad (tiene {edad} años según la CURP).")
     instance.fecha_nacimiento = fecha_nac
@@ -371,11 +373,12 @@ class VoucherForm(forms.ModelForm):
         model = Adeudo
         fields = ['voucher_comprobante']
         widgets = {
-            'voucher_comprobante': forms.FileInput(attrs={'class': 'form-control', 'accept': 'image/*,.pdf'})
+            'voucher_comprobante': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*,.pdf'})
         }
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['voucher_comprobante'].required = True
+        tiene_archivo = self.instance and self.instance.voucher_comprobante
+        self.fields['voucher_comprobante'].required = not tiene_archivo
         self.fields['voucher_comprobante'].error_messages = {'required': 'Debes seleccionar un archivo o fotografía antes de enviar el comprobante.'}
 
     def clean_voucher_comprobante(self):
@@ -610,12 +613,23 @@ class ResetPasswordForm(forms.Form):
         widget=forms.PasswordInput(attrs={'class': 'form-control'}),
         label='Nueva contraseña'
     )
+    confirmar_password = forms.CharField(
+        max_length=128,
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        label='Confirmar contraseña'
+    )
 
     def clean_nueva_password(self):
         password = self.cleaned_data['nueva_password']
         from django.contrib.auth.password_validation import validate_password
         validate_password(password)
         return password
+
+    def clean(self):
+        cd = super().clean()
+        if cd.get('nueva_password') and cd.get('confirmar_password') and cd['nueva_password'] != cd['confirmar_password']:
+            raise forms.ValidationError("Las contraseñas no coinciden.")
+        return cd
 
 
 class EditarCuentaEntrenadorForm(forms.Form):

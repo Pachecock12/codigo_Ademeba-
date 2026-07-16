@@ -261,7 +261,7 @@ def registrar_jugador_equipo(peticion, equipo_id):
                 messages.success(peticion, f'Registro enviado al equipo {equipo.club}. Se ha generado un adeudo de inscripción de ${costo:.2f}.')
                 return redirect('dashboard')
             except Exception as e:
-                messages.error(peticion, f'Error al guardar los archivos en el servidor. Verifica que los archivos sean válidos y que la conexión a S3 esté configurada correctamente. Detalle: {e}')
+                messages.error(peticion, 'Error al guardar los archivos en el servidor. Verifica que los archivos sean válidos y que la conexión esté configurada correctamente.')
                 logger.exception("Error al registrar jugador con archivos")
         else:
             for field, errores in form.errors.items():
@@ -323,6 +323,10 @@ def solicitar_cambio_equipo(peticion, jugador_id):
             if SolicitudCambioEquipo.objects.filter(jugador=jugador, estado='PENDIENTE').exists():
                 messages.warning(peticion, 'Ya tienes una solicitud de cambio en proceso para este jugador.')
                 return redirect('dashboard')
+            equipo_destino = form.cleaned_data['equipo_destino']
+            if jugador.equipo and equipo_destino == jugador.equipo:
+                messages.error(peticion, 'No puedes solicitar un cambio a tu equipo actual.')
+                return redirect('dashboard')
             solicitud = form.save(commit=False)
             solicitud.jugador = jugador
             solicitud.equipo_origen = jugador.equipo
@@ -343,6 +347,7 @@ def solicitar_cambio_equipo(peticion, jugador_id):
 @login_required
 @secretaria_required
 def lista_equipos(peticion):
+    form_equipo = EquipoForm()
     if peticion.method == 'POST':
         if 'btn_crear_equipo' in peticion.POST:
             form_equipo = EquipoForm(peticion.POST, peticion.FILES)
@@ -352,8 +357,6 @@ def lista_equipos(peticion):
                 return redirect('lista_equipos')
             else:
                 messages.error(peticion, 'Error al crear equipo. Verifica los campos.')
-    else: 
-        form_equipo = EquipoForm()
     equipos_lista = Equipo.objects.all().order_by('club', 'nombre')
     paginator = Paginator(equipos_lista, 20)
     page_number = peticion.GET.get('page')
@@ -467,6 +470,8 @@ def cambiar_logo_equipo(peticion, equipo_id):
 
 @login_required
 def eliminar_staff(peticion, pk):
+    if peticion.method != 'POST':
+        return redirect('dashboard')
     miembro_staff = get_object_or_404(MiembroStaff, pk=pk)
     if miembro_staff.equipo.entrenador == peticion.user or peticion.user.is_staff: 
         equipo_id = miembro_staff.equipo.id
@@ -493,6 +498,8 @@ def editar_staff(peticion, pk):
 @login_required
 @secretaria_required
 def eliminar_equipo(peticion, equipo_id):
+    if peticion.method != 'POST':
+        return redirect('lista_equipos')
     equipo = get_object_or_404(Equipo, id=equipo_id)
     nombre_club = equipo.club
     equipo.delete()
@@ -505,6 +512,7 @@ def eliminar_equipo(peticion, equipo_id):
 @login_required
 @secretaria_required
 def lista_temporadas(peticion):
+    form_temporada = TemporadaForm()
     if peticion.method == 'POST':
         if 'btn_crear_temporada' in peticion.POST:
             form_temporada = TemporadaForm(peticion.POST)
@@ -512,8 +520,6 @@ def lista_temporadas(peticion):
                 form_temporada.save()
                 messages.success(peticion, '¡Temporada creada exitosamente!')
                 return redirect('lista_temporadas')
-    else: 
-        form_temporada = TemporadaForm()
         
     hoy = timezone.now().date()
     temporadas_activas = Temporada.objects.filter(campeon__isnull=True).annotate(inscritos=Count('inscripciones')).order_by('-fecha_inicio')
@@ -536,6 +542,8 @@ def editar_temporada(peticion, temporada_id):
 @login_required
 @secretaria_required
 def eliminar_temporada(peticion, temporada_id):
+    if peticion.method != 'POST':
+        return redirect('lista_temporadas')
     temporada = get_object_or_404(Temporada, id=temporada_id)
     nombre_torneo = temporada.nombre
     temporada.delete()
@@ -723,6 +731,7 @@ def mis_adeudos_entrenador(peticion):
 @login_required
 @secretaria_required
 def lista_entrenadores(peticion):
+    form_entrenador = RegistroEntrenadorForm()
     if peticion.method == 'POST':
         if 'btn_crear_entrenador' in peticion.POST:
             logger.info(f"POST data keys: {list(peticion.POST.keys())}")
@@ -743,8 +752,6 @@ def lista_entrenadores(peticion):
                             messages.error(peticion, f'{label}: {error}')
         else:
             logger.warning("btn_crear_entrenador NOT in POST data")
-    else: 
-        form_entrenador = RegistroEntrenadorForm()
         
     entrenadores_lista = User.objects.filter(is_staff=False, perfil__isnull=True).order_by('first_name', 'username')
     paginator = Paginator(entrenadores_lista, 20)
@@ -773,7 +780,12 @@ def editar_cuenta_entrenador(peticion, user_id):
 @login_required
 @secretaria_required
 def toggle_acceso_entrenador(peticion, user_id):
+    if peticion.method != 'POST':
+        return redirect('lista_entrenadores')
     usuario = get_object_or_404(User, id=user_id)
+    if usuario == peticion.user:
+        messages.error(peticion, 'No puedes suspender tu propia cuenta de acceso.')
+        return redirect('lista_entrenadores')
     usuario.is_active = not usuario.is_active
     usuario.save()
     estado = "REACTIVADO" if usuario.is_active else "SUSPENDIDO"
@@ -849,6 +861,8 @@ def panel_finanzas(peticion):
 @login_required
 @user_passes_test(admin_o_secre_check)
 def eliminar_adeudo(peticion, pk):
+    if peticion.method != 'POST':
+        return redirect('panel_finanzas')
     adeudo = get_object_or_404(Adeudo, pk=pk)
     adeudo.delete()
     messages.success(peticion, 'El adeudo ha sido anulado del sistema.')
@@ -857,6 +871,8 @@ def eliminar_adeudo(peticion, pk):
 @login_required
 @user_passes_test(admin_o_secre_check)
 def cobrar_efectivo(peticion, pk):
+    if peticion.method != 'POST':
+        return redirect('panel_finanzas')
     adeudo = get_object_or_404(Adeudo, pk=pk)
     adeudo.estado = 'PAGADO'
     adeudo.fecha_pago = timezone.now()
@@ -871,6 +887,8 @@ def cobrar_efectivo(peticion, pk):
 @login_required
 @user_passes_test(admin_o_secre_check)
 def aprobar_voucher(peticion, pk):
+    if peticion.method != 'POST':
+        return redirect('panel_finanzas')
     adeudo = get_object_or_404(Adeudo, pk=pk)
     adeudo.estado = 'PAGADO'
     adeudo.fecha_pago = timezone.now()
@@ -954,7 +972,7 @@ def panel_disciplina(peticion):
             if form.is_valid():
                 sancion = form.save(commit=False)
                 monto = form.cleaned_data.get('monto_multa')
-                if monto:
+                if monto is not None:
                     sancion.monto_multa = monto
                 ultima_temp = Temporada.objects.order_by('-fecha_inicio', '-id').first()
                 if not ultima_temp:
@@ -1081,10 +1099,12 @@ def dar_de_baja_jugador(peticion, jugador_id):
             messages.success(peticion, f'El jugador {jugador.nombres} ha sido dado de baja del club. Ahora es Agente Libre.')
         else:
             messages.error(peticion, 'No tienes permisos para dar de baja a este jugador.')
-    return redirect(peticion.META.get('HTTP_REFERER', '/'))
+    return redirect(peticion.META.get('HTTP_REFERER', '/') if peticion.META.get('HTTP_REFERER', '').startswith(peticion.build_absolute_uri('/')) else 'dashboard')
 
 @login_required
 def eliminar_jugador(peticion, pk):
+    if peticion.method != 'POST':
+        return redirect('dashboard')
     jugador = get_object_or_404(Jugador, pk=pk)
     
     if admin_o_secre_check(peticion.user):
@@ -1127,6 +1147,8 @@ def panel_aprobaciones(peticion):
 @login_required
 @secretaria_required
 def aprobar_jugador(peticion, pk):
+    if peticion.method != 'POST':
+        return redirect('panel_aprobaciones')
     jugador = get_object_or_404(Jugador, pk=pk)
     tiene_adeudo_pendiente = Adeudo.objects.filter(
         jugador=jugador, tipo_adeudo='INSCRIPCION'
@@ -1146,6 +1168,8 @@ def aprobar_jugador(peticion, pk):
 @login_required
 @secretaria_required
 def rechazar_jugador(peticion, pk):
+    if peticion.method != 'POST':
+        return redirect('panel_aprobaciones')
     jugador = get_object_or_404(Jugador, pk=pk)
     jugador.estado_validacion = 'RECHAZADO'
     jugador.motivo_rechazo = 'Documentación incompleta o incorrecta.'
@@ -1179,6 +1203,9 @@ def lista_cambios_equipo(peticion):
 @secretaria_required
 def procesar_cambio_equipo(peticion, solicitud_id, accion):
     solicitud = get_object_or_404(SolicitudCambioEquipo, id=solicitud_id)
+    if solicitud.estado != 'PENDIENTE':
+        messages.warning(peticion, 'Esta solicitud ya fue procesada anteriormente.')
+        return redirect('lista_cambios_equipo')
     if accion == 'aprobar':
         solicitud.estado = 'APROBADO'
         solicitud.fecha_resolucion = timezone.now()
@@ -1219,6 +1246,11 @@ def procesar_cambio_equipo(peticion, solicitud_id, accion):
 @login_required
 def credencial_jugador(peticion, pk):
     jugador = get_object_or_404(Jugador, pk=pk, activo=True)
+    es_tutor = hasattr(peticion.user, 'perfil') and jugador.tutor == peticion.user
+    es_entrenador = hasattr(peticion.user, 'equipo_entrenado') and jugador.equipo and jugador.equipo.entrenador == peticion.user
+    if not es_tutor and not es_entrenador and not peticion.user.is_staff:
+        messages.error(peticion, 'No tienes permiso para ver la credencial de este jugador.')
+        return redirect('dashboard')
     edad_deportiva = "N/A"
     if jugador.fecha_nacimiento:
         anio_actual = date.today().year
@@ -1811,6 +1843,13 @@ def cambiar_contrasena(peticion):
         elif nueva != confirmar:
             messages.error(peticion, 'Las contraseñas no coinciden.')
         else:
+            from django.contrib.auth.password_validation import validate_password
+            try:
+                validate_password(nueva, peticion.user)
+            except Exception as e:
+                for error in e.messages:
+                    messages.error(peticion, error)
+                return render(peticion, 'gestion/cambiar_contrasena.html', {})
             peticion.user.set_password(nueva)
             peticion.user.save()
             update_session_auth_hash(peticion, peticion.user)
@@ -1851,15 +1890,19 @@ def pagar_multa(peticion, sancion_id):
     return render(peticion, 'gestion/subir_voucher.html', {'form': form, 'adeudo': adeudo, 'config': config})
 
 
-def validar_jugador_qr(request, pk):
+@login_required
+def validar_jugador_qr(peticion, pk):
     jugador = get_object_or_404(Jugador, pk=pk)
+    if not peticion.user.is_staff and not hasattr(peticion.user, 'equipo_entrenado'):
+        messages.error(peticion, 'No tienes permiso para ver el perfil de este jugador.')
+        return redirect('dashboard')
     estatus = jugador.semaforo['estatus']
     color = jugador.semaforo['color']
     icono = jugador.semaforo['icono']
     mensaje_alerta = jugador.semaforo['mensaje']
     nombres_torneos = jugador.ligas_actuales
     context = {'jugador': jugador, 'estatus': estatus, 'color': color, 'icono': icono, 'mensaje_alerta': mensaje_alerta, 'torneos': nombres_torneos}
-    return render(request, 'gestion/public_perfil.html', context)
+    return render(peticion, 'gestion/public_perfil.html', context)
 
 @login_required
 def lista_jugadores_baja(request):
@@ -1869,6 +1912,8 @@ def lista_jugadores_baja(request):
 
 @login_required
 def reactivar_jugador(request, pk):
+    if request.method != 'POST':
+        return redirect('dashboard')
     if not admin_o_secre_check(request.user): return redirect('dashboard')
     jugador = get_object_or_404(Jugador, pk=pk)
     jugador.activo = True
@@ -1892,6 +1937,8 @@ def reactivar_jugador(request, pk):
 @login_required
 @secretaria_required
 def validar_inscripcion(peticion, inscripcion_id):
+    if peticion.method != 'POST':
+        return redirect('dashboard')
     inscripcion = get_object_or_404(InscripcionTorneo, id=inscripcion_id)
     inscripcion.validada = True
     inscripcion.save()
@@ -1966,6 +2013,8 @@ def panel_reembolsos(peticion):
 @login_required
 @user_passes_test(admin_o_secre_check)
 def procesar_reembolso(peticion, pk):
+    if peticion.method != 'POST':
+        return redirect('panel_reembolsos')
     reembolso = get_object_or_404(Reembolso, pk=pk)
     if reembolso.procesado:
         messages.warning(peticion, 'Este reembolso ya fue procesado.')
