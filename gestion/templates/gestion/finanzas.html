@@ -16,7 +16,7 @@
 
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-success fw-bold shadow-sm border-0">{{ message }}</div>
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'warning' %}warning{% elif message.tags == 'success' %}success{% else %}info{% endif %} fw-bold shadow-sm border-0">{{ message }}</div>
         {% endfor %}
     {% endif %}
 
@@ -67,20 +67,32 @@
                                             <a href="{{ a.voucher_comprobante.url }}" target="_blank" class="btn btn-sm btn-outline-dark rounded-pill" title="Ver Voucher">
                                                 <i class="bi bi-receipt"></i>
                                             </a>
-                                            <a href="{% url 'aprobar_voucher' a.id %}" class="btn btn-sm btn-success rounded-pill fw-bold" onclick="return confirm('¿Aprobar este voucher y marcar como PAGADO?');">
-                                                <i class="bi bi-check-lg"></i> Aprobar
-                                            </a>
-                                            <a href="{% url 'rechazar_voucher' a.id %}" class="btn btn-sm btn-warning rounded-pill fw-bold" onclick="return confirm('¿Rechazar este voucher? El adeudo volverá a pendiente.');">
-                                                <i class="bi bi-x-lg"></i> Rechazar
-                                            </a>
+                                            <form action="{% url 'aprobar_voucher' a.id %}" method="POST" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-success rounded-pill fw-bold" onclick="return confirm('¿Aprobar este voucher y marcar como PAGADO?');">
+                                                    <i class="bi bi-check-lg"></i> Aprobar
+                                                </button>
+                                            </form>
+                                            <form action="{% url 'rechazar_voucher' a.id %}" method="POST" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-warning rounded-pill fw-bold" onclick="return confirm('¿Rechazar este voucher? El adeudo volverá a pendiente.');">
+                                                    <i class="bi bi-x-lg"></i> Rechazar
+                                                </button>
+                                            </form>
                                         {% elif a.estado == 'PENDIENTE' %}
-                                            <a href="{% url 'cobrar_efectivo' a.id %}" class="btn btn-sm btn-success rounded-pill fw-bold" title="Cobrar en Efectivo" onclick="return confirm('¿Confirmas el pago en efectivo?');">
-                                                <i class="bi bi-cash"></i> Cobrar
-                                            </a>
+                                            <form action="{% url 'cobrar_efectivo' a.id %}" method="POST" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-success rounded-pill fw-bold" title="Cobrar en Efectivo" onclick="return confirm('¿Confirmas el pago en efectivo?');">
+                                                    <i class="bi bi-cash"></i> Cobrar
+                                                </button>
+                                            </form>
                                         {% endif %}
-                                        <a href="{% url 'eliminar_adeudo' a.id %}" class="btn btn-sm btn-outline-danger rounded-pill" title="Anular Cargo" onclick="return confirm('¿Seguro que deseas anular este cargo?');">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
+                                        <form action="{% url 'eliminar_adeudo' a.id %}" method="POST" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill" title="Anular Cargo" onclick="return confirm('¿Seguro que deseas anular este cargo?');">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>

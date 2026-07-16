@@ -53,7 +53,10 @@
                                         Aprobar (Pago Pendiente)
                                     </button>
                                 {% else %}
-                                    <a href="{% url 'aprobar_jugador' j.pk %}" class="btn btn-success btn-sm fw-bold px-3 rounded-pill shadow-sm" onclick="return confirm('¿Aprobar jugador de manera oficial?');">Aprobar</a>
+                                    <form action="{% url 'aprobar_jugador' j.pk %}" method="POST" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-success btn-sm fw-bold px-3 rounded-pill shadow-sm" onclick="return confirm('¿Aprobar jugador de manera oficial?');">Aprobar</button>
+                                    </form>
                                 {% endif %}
                                 
                                 <button class="btn btn-danger btn-sm fw-bold px-3 rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRechazo{{ j.id }}">Rechazar</button>

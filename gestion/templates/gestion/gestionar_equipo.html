@@ -342,9 +342,12 @@
                                         <button class="btn btn-sm btn-outline-secondary rounded-circle shadow-sm ms-1" title="Editar" data-bs-toggle="modal" data-bs-target="#modalStaffEdit{{ m.id }}">
                                             <i class="bi bi-pencil-fill"></i>
                                         </button>
-                                        <a href="{% url 'eliminar_staff' m.id %}" class="btn btn-sm btn-outline-danger rounded-circle shadow-sm ms-1" onclick="return confirm('¿Quitar a esta persona del cuerpo técnico?');">
-                                            <i class="bi bi-trash-fill"></i>
-                                        </a>
+                                        <form action="{% url 'eliminar_staff' m.id %}" method="POST" class="m-0 p-0 d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle shadow-sm ms-1" onclick="return confirm('¿Quitar a esta persona del cuerpo técnico?');">
+                                                <i class="bi bi-trash-fill"></i>
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
 

@@ -79,9 +79,12 @@
                                     <i class="bi bi-check-circle-fill me-1"></i> Aprobar (Pago Pendiente)
                                 </button>
                             {% else %}
-                                <a href="{% url 'aprobar_jugador' jugador.id %}" class="btn btn-success btn-sm flex-fill fw-bold rounded-pill shadow-sm py-2" onclick="return confirm('¿Seguro que deseas aprobar a este jugador?');">
-                                    <i class="bi bi-check-circle-fill me-1"></i> Aprobar
-                                </a>
+                                <form action="{% url 'aprobar_jugador' jugador.id %}" method="POST" class="d-inline flex-fill">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-sm flex-fill fw-bold rounded-pill shadow-sm py-2 w-100" onclick="return confirm('¿Seguro que deseas aprobar a este jugador?');">
+                                        <i class="bi bi-check-circle-fill me-1"></i> Aprobar
+                                    </button>
+                                </form>
                             {% endif %}
                             <button type="button" class="btn btn-danger btn-sm flex-fill fw-bold rounded-pill shadow-sm py-2" data-bs-toggle="modal" data-bs-target="#modalRechazo{{ jugador.id }}">
                                 <i class="bi bi-x-circle-fill me-1"></i> Rechazar
@@ -357,9 +360,12 @@
                         <h5 class="fw-bold text-danger mb-1"><i class="bi bi-exclamation-triangle-fill me-2"></i> Zona de Peligro Administrativa</h5>
                         <p class="text-muted small mb-0">Al dar de baja a un jugador, este perderá acceso a su equipo actual y pasará a estado INACTIVO.</p>
                     </div>
-                    <a href="{% url 'eliminar_jugador' jugador.id %}" class="btn btn-danger fw-bold rounded-pill px-4 shadow-sm" onclick="return confirm('¿Estás seguro de que deseas dar de baja e inactivar a este jugador?');">
-                        <i class="bi bi-person-fill-x me-1"></i> Dar de Baja
-                    </a>
+                    <form action="{% url 'eliminar_jugador' jugador.id %}" method="POST" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger fw-bold rounded-pill px-4 shadow-sm" onclick="return confirm('¿Estás seguro de que deseas dar de baja e inactivar a este jugador?');">
+                            <i class="bi bi-person-fill-x me-1"></i> Dar de Baja
+                        </button>
+                    </form>
                 </div>
             </div>
             {% endif %}

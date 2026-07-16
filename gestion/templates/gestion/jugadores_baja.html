@@ -54,9 +54,12 @@
                                 </span>
                             </td>
                             <td class="py-3 text-end pe-4">
-                                <a href="{% url 'reactivar_jugador' jugador.pk %}" class="btn btn-sm btn-success rounded-pill fw-bold shadow-sm" onclick="return confirm('¿Seguro que deseas REACTIVAR a {{ jugador.nombres }}? Volverá a aparecer en los listados normales.');">
-                                    <i class="bi bi-arrow-counterclockwise me-1"></i> Reactivar
-                                </a>
+                                <form action="{% url 'reactivar_jugador' jugador.pk %}" method="POST" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-success rounded-pill fw-bold shadow-sm" onclick="return confirm('¿Seguro que deseas REACTIVAR a {{ jugador.nombres }}? Volverá a aparecer en los listados normales.');">
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i> Reactivar
+                                    </button>
+                                </form>
                                 <a href="{% url 'perfil_jugador' jugador.pk %}" class="btn btn-sm btn-outline-dark rounded-pill fw-bold shadow-sm ms-1">
                                     Ver Perfil
                                 </a>

@@ -903,6 +903,8 @@ def aprobar_voucher(peticion, pk):
 @login_required
 @user_passes_test(admin_o_secre_check)
 def rechazar_voucher(peticion, pk):
+    if peticion.method != 'POST':
+        return redirect('panel_finanzas')
     adeudo = get_object_or_404(Adeudo, pk=pk)
     if adeudo.estado != 'REVISION':
         messages.error(peticion, 'Este adeudo no está en revisión.')

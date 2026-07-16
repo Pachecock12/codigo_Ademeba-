@@ -153,7 +153,10 @@
                                     {% else %}
                                         <span class="badge bg-warning text-dark shadow-sm"><i class="bi bi-hourglass-split me-1"></i> Pendiente</span>
                                         {% if user.is_staff %}
-                                            <a href="{% url 'validar_inscripcion' ins.inscripcion_id %}" class="btn btn-sm btn-dark rounded-pill py-0 px-2" style="font-size: 0.75rem;" onclick="event.stopPropagation();">Validar</a>
+                                            <form action="{% url 'validar_inscripcion' ins.inscripcion_id %}" method="POST" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-dark rounded-pill py-0 px-2" style="font-size: 0.75rem;" onclick="event.stopPropagation();">Validar</button>
+                                            </form>
                                         {% endif %}
                                     {% endif %}
                                 </div>

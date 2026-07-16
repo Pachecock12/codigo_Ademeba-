@@ -63,9 +63,11 @@
                     
                     <!-- BOTÓN ELIMINAR (SOLO PARA ADMINS/SECRETARIAS) -->
                     {% if user.is_staff or user.is_superuser %}
-                    <a href="{% url 'eliminar_equipo' equipo.id %}" class="btn btn-danger btn-sm w-100 rounded-pill fw-bold" onclick="return confirm('¿ESTÁS TOTALMENTE SEGURO? Al eliminar este equipo, los jugadores inscritos en él quedarán sin club y se borrarán sus registros de liga. Esta acción NO se puede deshacer.');">
-                        <i class="bi bi-trash-fill me-1"></i> Eliminar Equipo
-                    </a>
+                    <form action="{% url 'eliminar_equipo' equipo.id %}" method="POST" class="m-0">{% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm w-100 rounded-pill fw-bold" onclick="return confirm('¿ESTÁS TOTALMENTE SEGURO? Al eliminar este equipo, los jugadores inscritos en él quedarán sin club y se borrarán sus registros de liga. Esta acción NO se puede deshacer.');">
+                            <i class="bi bi-trash-fill me-1"></i> Eliminar Equipo
+                        </button>
+                    </form>
                     {% endif %}
                 </div>
             </div>
