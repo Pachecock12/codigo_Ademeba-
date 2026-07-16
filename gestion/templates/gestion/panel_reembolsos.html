@@ -18,6 +18,7 @@
                     <tr>
                         <th class="ps-4">JUGADOR</th>
                         <th>TUTOR</th>
+                        <th>MOTIVO</th>
                         <th>BANCO</th>
                         <th>CUENTA</th>
                         <th>TITULAR</th>
@@ -35,9 +36,10 @@
                             </a>
                         </td>
                         <td>{{ r.tutor.get_full_name|default:r.tutor.username }}</td>
-                        <td>{{ r.banco }}</td>
-                        <td><code>{{ r.numero_cuenta }}</code></td>
-                        <td>{{ r.titular }}</td>
+                        <td><small class="text-muted">{{ r.adeudo.motivo_rechazo|default:"—" }}</small></td>
+                        <td>{% if r.banco %}{{ r.banco }}{% else %}<span class="badge bg-warning text-dark">Pendiente</span>{% endif %}</td>
+                        <td>{% if r.numero_cuenta %}<code>{{ r.numero_cuenta }}</code>{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                        <td>{% if r.titular %}{{ r.titular }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
                         <td class="fw-bold text-danger">${{ r.monto }}</td>
                         <td class="small text-muted">{{ r.fecha_solicitud|date:"d/m/Y H:i" }}</td>
                         <td class="text-end pe-4">
@@ -51,7 +53,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="8" class="text-center text-muted py-4 border-0">
+                        <td colspan="9" class="text-center text-muted py-4 border-0">
                             <i class="bi bi-emoji-smile fs-3 d-block mb-2 text-success"></i>
                             No hay solicitudes de reembolso pendientes.
                         </td>

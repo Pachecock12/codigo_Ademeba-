@@ -139,7 +139,14 @@
                                 <i class="bi bi-person-lines-fill me-1"></i> Ver Perfil
                             </a>
 
-                            {% if j.estado_validacion == 'RECHAZADO' and j.tiene_pago_inscripcion and not j.tiene_solicitud_reembolso_pendiente %}
+                            {% if j.tiene_reembolso_pendiente_datos %}
+                                <div class="alert alert-warning rounded-pill py-2 px-3 mb-0 small fw-bold">
+                                    <i class="bi bi-info-circle me-1"></i> Tu pago fue rechazado. Completa tus datos bancarios.
+                                </div>
+                                <a href="{% url 'solicitar_reembolso' j.id %}" class="btn btn-warning fw-bold rounded-pill shadow-sm py-2">
+                                    <i class="bi bi-bank me-1"></i> Completar Datos Bancarios
+                                </a>
+                            {% elif j.estado_validacion == 'RECHAZADO' and j.tiene_pago_inscripcion and not j.tiene_solicitud_reembolso_pendiente %}
                                 <a href="{% url 'solicitar_reembolso' j.id %}" class="btn btn-outline-danger fw-bold rounded-pill shadow-sm py-2">
                                     <i class="bi bi-cash-stack me-1"></i> Solicitar Reembolso
                                 </a>

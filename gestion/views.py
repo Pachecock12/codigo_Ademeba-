@@ -909,10 +909,34 @@ def rechazar_voucher(peticion, pk):
     if adeudo.estado != 'REVISION':
         messages.error(peticion, 'Este adeudo no está en revisión.')
         return redirect('panel_finanzas')
+
+    motivo = peticion.POST.get('motivo_rechazo', '').strip()
+    solicitar_reembolso = peticion.POST.get('solicitar_reembolso') == 'on'
+
     adeudo.estado = 'PENDIENTE'
     adeudo.voucher_comprobante = None
+    if motivo:
+        adeudo.motivo_rechazo = motivo
     adeudo.save()
-    messages.warning(peticion, f'Voucher rechazado. El adeudo "{adeudo.concepto}" ha vuelto a estado pendiente.')
+
+    if solicitar_reembolso and adeudo.tutor and adeudo.monto > 0:
+        jugador_asociado = adeudo.jugador
+        if jugador_asociado and not Reembolso.objects.filter(jugador=jugador_asociado, procesado=False).exists():
+            Reembolso.objects.create(
+                jugador=jugador_asociado,
+                tutor=adeudo.tutor,
+                adeudo=adeudo,
+                monto=adeudo.monto,
+                banco='',
+                numero_cuenta='',
+                titular='',
+            )
+            messages.warning(peticion, f'Voucher rechazado. Se notificó al tutor para completar datos bancarios por reembolso de ${adeudo.monto}.')
+        else:
+            messages.warning(peticion, 'Voucher rechazado. Ya existe una solicitud de reembolso activa para este jugador.')
+    else:
+        messages.warning(peticion, f'Voucher rechazado. El adeudo "{adeudo.concepto}" ha vuelto a estado pendiente.')
+
     return redirect('panel_finanzas')
 
 @login_required
@@ -1964,8 +1988,34 @@ def mis_jugadores(peticion):
 @login_required
 def solicitar_reembolso(peticion, jugador_id):
     jugador = get_object_or_404(Jugador, id=jugador_id, tutor=peticion.user)
+
+    reembolso_pendiente = Reembolso.objects.filter(
+        jugador=jugador, procesado=False, banco=''
+    ).first()
+
+    if reembolso_pendiente:
+        adeudo = reembolso_pendiente.adeudo
+        if peticion.method == 'POST':
+            banco = peticion.POST.get('banco', '').strip()
+            numero_cuenta = peticion.POST.get('numero_cuenta', '').strip()
+            titular = peticion.POST.get('titular', '').strip()
+            if not banco or not numero_cuenta or not titular:
+                messages.error(peticion, 'Todos los campos bancarios son obligatorios.')
+            else:
+                reembolso_pendiente.banco = banco
+                reembolso_pendiente.numero_cuenta = numero_cuenta
+                reembolso_pendiente.titular = titular
+                reembolso_pendiente.save()
+                messages.success(peticion, f'Datos bancarios enviados. Te contactaremos para devolver ${reembolso_pendiente.monto}.')
+                return redirect('dashboard')
+        bancos_sugeridos = ['BBVA', 'Santander', 'Banamex', 'Banorte', 'HSBC', 'Scotiabank', 'Azteca', 'Bancoppel', 'Afirme', 'Interacciones']
+        return render(peticion, 'gestion/solicitar_reembolso.html', {
+            'jugador': jugador, 'adeudo': adeudo, 'bancos_sugeridos': bancos_sugeridos,
+            'reembolso': reembolso_pendiente,
+        })
+
     if jugador.estado_validacion != 'RECHAZADO':
-        messages.error(peticion, 'Solo puedes solicitar reembolso si tu jugador fue rechazado.')
+        messages.error(peticion, 'No hay un reembolso pendiente para este jugador.')
         return redirect('dashboard')
 
     adeudo_pagado = Adeudo.objects.filter(
@@ -1998,6 +2048,7 @@ def solicitar_reembolso(peticion, jugador_id):
     bancos_sugeridos = ['BBVA', 'Santander', 'Banamex', 'Banorte', 'HSBC', 'Scotiabank', 'Azteca', 'Bancoppel', 'Afirme', 'Interacciones']
     return render(peticion, 'gestion/solicitar_reembolso.html', {
         'jugador': jugador, 'adeudo': adeudo_pagado, 'bancos_sugeridos': bancos_sugeridos,
+        'reembolso': None,
     })
 
 

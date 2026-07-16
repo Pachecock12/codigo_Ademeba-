@@ -217,6 +217,10 @@ class Jugador(models.Model):
         return self.reembolsos.filter(procesado=False).exists()
 
     @property
+    def tiene_reembolso_pendiente_datos(self):
+        return self.reembolsos.filter(procesado=False, banco='').exists()
+
+    @property
     def torneos_activos(self):
         hoy = date.today()
         return [ins for ins in self.torneos_participados.all()
@@ -373,6 +377,7 @@ class Adeudo(models.Model):
     voucher_comprobante = models.FileField(upload_to='vouchers_finanzas/', null=True, blank=True)
     pagado = models.BooleanField(default=False, db_index=True)
     sancion = models.ForeignKey('Sancion', on_delete=models.SET_NULL, null=True, blank=True, related_name='adeudos')
+    motivo_rechazo = models.TextField(null=True, blank=True, verbose_name="Motivo de rechazo del voucher")
     
     fecha_creacion = models.DateTimeField(auto_now_add=True, db_index=True)
     fecha_pago = models.DateTimeField(null=True, blank=True)

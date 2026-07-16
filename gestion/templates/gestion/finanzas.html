@@ -73,12 +73,10 @@
                                                     <i class="bi bi-check-lg"></i> Aprobar
                                                 </button>
                                             </form>
-                                            <form action="{% url 'rechazar_voucher' a.id %}" method="POST" class="d-inline">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-sm btn-warning rounded-pill fw-bold" onclick="return confirm('¿Rechazar este voucher? El adeudo volverá a pendiente.');">
-                                                    <i class="bi bi-x-lg"></i> Rechazar
-                                                </button>
-                                            </form>
+                                            <button type="button" class="btn btn-sm btn-warning rounded-pill fw-bold"
+                                                    data-bs-toggle="modal" data-bs-target="#modalRechazar{{ a.id }}">
+                                                <i class="bi bi-x-lg"></i> Rechazar
+                                            </button>
                                         {% elif a.estado == 'PENDIENTE' %}
                                             <form action="{% url 'cobrar_efectivo' a.id %}" method="POST" class="d-inline">
                                                 {% csrf_token %}
@@ -168,5 +166,49 @@
             </div>
         </div>
     </div>
+
+    {% for a in adeudos %}
+        {% if a.estado == 'REVISION' and a.voucher_comprobante %}
+        <div class="modal fade" id="modalRechazar{{ a.id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content border-0 rounded-4 shadow-lg">
+                    <div class="modal-header bg-warning bg-gradient text-dark border-bottom-0">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-x-circle me-2"></i> Rechazar Voucher</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="POST" action="{% url 'rechazar_voucher' a.id %}">
+                        {% csrf_token %}
+                        <div class="modal-body p-4">
+                            <div class="alert alert-light border rounded-3 mb-3">
+                                <strong>Adeudo:</strong> {{ a.concepto }}<br>
+                                <strong>Monto:</strong> ${{ a.monto }}<br>
+                                <strong>Tutor:</strong> {{ a.tutor.get_full_name|default:a.tutor.username }}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Motivo del rechazo *</label>
+                                <textarea name="motivo_rechazo" class="form-control" rows="3" required
+                                          placeholder="Describe por qué se rechaza este voucher..."></textarea>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="solicitar_reembolso" id="reembolso{{ a.id }}">
+                                <label class="form-check-label fw-bold" for="reembolso{{ a.id }}">
+                                    Solicitar reembolso al tutor (${{ a.monto }})
+                                </label>
+                                <div class="form-text">El tutor recibirá una notificación para completar sus datos bancarios.</div>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-top-0">
+                            <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-warning fw-bold rounded-pill px-4"
+                                    onclick="return confirm('¿Rechazar este voucher?');">
+                                <i class="bi bi-x-lg me-1"></i> Rechazar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {% endfor %}
 </div>
 {% endblock %}

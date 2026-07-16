@@ -14,10 +14,22 @@
                 </div>
 
                 <div class="card-body p-4">
+                    {% if reembolso %}
+                    <div class="alert alert-warning border-0 rounded-3 mb-4">
+                        <h6 class="fw-bold mb-1"><i class="bi bi-info-circle me-1"></i> Voucher Rechazado</h6>
+                        <p class="small mb-0">Tu pago para <strong>{{ jugador.nombres }} {{ jugador.apellido_paterno }}</strong> fue rechazado por el administrador.</p>
+                        {% if adeudo and adeudo.motivo_rechazo %}
+                        <div class="mt-2 p-2 bg-white bg-opacity-25 rounded-2">
+                            <strong>Motivo:</strong> {{ adeudo.motivo_rechazo }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
                     <div class="alert alert-warning border-0 rounded-3 mb-4">
                         <h6 class="fw-bold mb-1"><i class="bi bi-info-circle me-1"></i> Documentos Rechazados</h6>
                         <p class="small mb-0">Tu jugador <strong>{{ jugador.nombres }} {{ jugador.apellido_paterno }}</strong> fue rechazado. Como ya realizaste el pago de inscripción, puedes solicitar la devolución de tu dinero.</p>
                     </div>
+                    {% endif %}
 
                     {% if adeudo %}
                     <div class="alert alert-light border rounded-3 mb-4">
@@ -56,7 +68,7 @@
 
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-danger fw-bold rounded-pill py-3 shadow-sm">
-                                <i class="bi bi-send-fill me-1"></i> Enviar Solicitud de Reembolso
+                                <i class="bi bi-send-fill me-1"></i> {% if reembolso %}Enviar Datos Bancarios{% else %}Enviar Solicitud de Reembolso{% endif %}
                             </button>
                             <a href="{% url 'dashboard' %}" class="btn btn-light fw-bold rounded-pill py-2">Cancelar</a>
                         </div>
