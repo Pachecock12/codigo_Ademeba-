@@ -377,9 +377,87 @@
                                                     
                                                     <p class="small text-muted fw-bold mb-1 text-uppercase">CURP</p>
                                                     <p class="fw-bold text-dark mb-0"><i class="bi bi-person-vcard-fill text-info me-2"></i> {{ m.curp|default:"No registrado" }}</p>
-                                                </div>
-                                            </div>
-                                        </div>
+        </div>
+    </div>
+
+    {% if pendientes_varonil or pendientes_femenil %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4 p-4 border-top border-4 border-warning">
+                <h5 class="fw-bold mb-3">
+                    <i class="bi bi-hourglass-split text-warning me-2"></i> Pendientes de Validación / Pago
+                    <span class="badge bg-warning text-dark ms-2">{{ pendientes_varonil|length|add:pendientes_femenil|length }}</span>
+                </h5>
+                <p class="text-muted small mb-3">Estos jugadores fueron registrados pero aún no cumplen con los requisitos (pago o validación de documentos). No aparecen en el roster activo.</p>
+
+                {% if pendientes_varonil %}
+                <h6 class="fw-bold text-dark mt-3 mb-2"><i class="bi bi-gender-male me-1"></i> Varonil</h6>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 small">
+                        <thead class="bg-light text-muted">
+                            <tr>
+                                <th class="ps-3">JUGADOR</th>
+                                <th>CURP</th>
+                                <th>ESTADO</th>
+                                <th>MOTIVO</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for j in pendientes_varonil %}
+                            <tr>
+                                <td class="ps-3 fw-bold">{{ j.nombres }} {{ j.apellido_paterno }}</td>
+                                <td><small class="text-muted">{{ j.curp }}</small></td>
+                                <td>
+                                    {% if j.estado_validacion == 'PENDIENTE' %}
+                                        <span class="badge bg-warning text-dark rounded-pill">Pendiente</span>
+                                    {% elif j.estado_validacion == 'RECHAZADO' %}
+                                        <span class="badge bg-danger rounded-pill">Rechazado</span>
+                                    {% endif %}
+                                </td>
+                                <td><small class="text-muted">{{ j.motivo_rechazo|default:"Sin revisar" }}</small></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+
+                {% if pendientes_femenil %}
+                <h6 class="fw-bold text-dark mt-3 mb-2"><i class="bi bi-gender-female me-1"></i> Femenil</h6>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 small">
+                        <thead class="bg-light text-muted">
+                            <tr>
+                                <th class="ps-3">JUGADORA</th>
+                                <th>CURP</th>
+                                <th>ESTADO</th>
+                                <th>MOTIVO</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for j in pendientes_femenil %}
+                            <tr>
+                                <td class="ps-3 fw-bold">{{ j.nombres }} {{ j.apellido_paterno }}</td>
+                                <td><small class="text-muted">{{ j.curp }}</small></td>
+                                <td>
+                                    {% if j.estado_validacion == 'PENDIENTE' %}
+                                        <span class="badge bg-warning text-dark rounded-pill">Pendiente</span>
+                                    {% elif j.estado_validacion == 'RECHAZADO' %}
+                                        <span class="badge bg-danger rounded-pill">Rechazado</span>
+                                    {% endif %}
+                                </td>
+                                <td><small class="text-muted">{{ j.motivo_rechazo|default:"Sin revisar" }}</small></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
                                     </div>
                                 </div>
 

@@ -442,14 +442,17 @@ def gestionar_equipo(peticion, equipo_id):
                 messages.error(peticion, 'No se encontró ningún jugador activo con esa CURP.')
             return redirect('gestionar_equipo', equipo_id=equipo_actual.id)
 
-    jugadores_varonil = Jugador.objects.filter(equipo=equipo_actual, activo=True, rama='Varonil').prefetch_related('torneos_participados__temporada', 'historial_equipos')
-    jugadores_femenil = Jugador.objects.filter(equipo=equipo_actual, activo=True, rama='Femenil').prefetch_related('torneos_participados__temporada', 'historial_equipos')
+    jugadores_varonil = Jugador.objects.filter(equipo=equipo_actual, activo=True, rama='Varonil', estado_validacion='APROBADO').prefetch_related('torneos_participados__temporada', 'historial_equipos')
+    jugadores_femenil = Jugador.objects.filter(equipo=equipo_actual, activo=True, rama='Femenil', estado_validacion='APROBADO').prefetch_related('torneos_participados__temporada', 'historial_equipos')
+    pendientes_varonil = Jugador.objects.filter(equipo=equipo_actual, activo=True, rama='Varonil').exclude(estado_validacion='APROBADO').order_by('-fecha_nacimiento')
+    pendientes_femenil = Jugador.objects.filter(equipo=equipo_actual, activo=True, rama='Femenil').exclude(estado_validacion='APROBADO').order_by('-fecha_nacimiento')
     miembros_staff = equipo_actual.miembros_staff.all()
 
     return render(peticion, 'gestion/gestionar_equipo.html', {
         'equipo': equipo_actual, 'form': formulario_jugador, 'form_staff': formulario_staff, 
         'form_edicion_equipo': formulario_edicion_equipo, 'jugadores_varonil': jugadores_varonil,
-        'jugadores_femenil': jugadores_femenil, 'staff': miembros_staff, 
+        'jugadores_femenil': jugadores_femenil, 'pendientes_varonil': pendientes_varonil,
+        'pendientes_femenil': pendientes_femenil, 'staff': miembros_staff, 
         'abrir_modal': abrir_modal_jugador, 'abrir_modal_staff': abrir_modal_staff,
         'es_admin_secre': admin_o_secre_check(peticion.user),
     })
@@ -1284,6 +1287,9 @@ def procesar_cambio_equipo(peticion, solicitud_id, accion):
 @login_required
 def credencial_jugador(peticion, pk):
     jugador = get_object_or_404(Jugador, pk=pk, activo=True)
+    if jugador.estado_validacion != 'APROBADO':
+        messages.error(peticion, 'La credencial solo está disponible para jugadores aprobados.')
+        return redirect('perfil_jugador', pk=pk)
     es_tutor = hasattr(peticion.user, 'perfil') and jugador.tutor == peticion.user
     es_entrenador = hasattr(peticion.user, 'equipo_entrenado') and jugador.equipo and jugador.equipo.entrenador == peticion.user
     if not es_tutor and not es_entrenador and not peticion.user.is_staff:
@@ -1324,7 +1330,10 @@ def generar_credencial_pdf(peticion, pk):
     Genera una credencial PDF de afiliación visualmente idéntica a la imagen de muestra,
     con el código QR posicionado verticalmente arriba del texto de vigencia.
     """
-    jugador = get_object_or_404(Jugador, pk=pk)
+    jugador = get_object_or_404(Jugador, pk=pk, activo=True)
+    if jugador.estado_validacion != 'APROBADO':
+        messages.error(peticion, 'La credencial solo está disponible para jugadores aprobados.')
+        return redirect('perfil_jugador', pk=pk)
     es_tutor = jugador.tutor and peticion.user == jugador.tutor
     es_entrenador = jugador.equipo and peticion.user == jugador.equipo.entrenador
     if not (es_tutor or es_entrenador or peticion.user.is_staff):
