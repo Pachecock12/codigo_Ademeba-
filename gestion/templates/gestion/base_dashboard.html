@@ -152,63 +152,17 @@
         #loading-overlay.show { display: flex; }
         #loading-overlay span { margin-top: 0.5rem; font-weight: 700; color: #495057; font-size: 0.9rem; }
 
-        .basketball-scene {
-            position: relative;
-            width: 120px;
-            height: 140px;
-        }
         .basketball {
-            font-size: 2.8rem;
-            position: absolute;
-            left: 50%;
-            bottom: 20px;
-            transform: translateX(-50%);
-            animation: bounce-ball 1.2s ease-in-out infinite;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-        }
-        .hoop {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 48px;
-            height: 30px;
-        }
-        .hoop-rim {
-            width: 48px;
-            height: 4px;
-            background: #e44;
-            border-radius: 2px;
-            position: absolute;
-            top: 0;
-        }
-        .hoop-net {
-            position: absolute;
-            top: 4px;
-            left: 6px;
-            width: 36px;
-            height: 24px;
-            border-left: 2px solid #ccc;
-            border-right: 2px solid #ccc;
-            border-bottom: 2px solid #ccc;
-            border-radius: 0 0 8px 8px;
-            background: repeating-linear-gradient(
-                90deg,
-                transparent,
-                transparent 5px,
-                rgba(200,200,200,0.4) 5px,
-                rgba(200,200,200,0.4) 6px
-            );
+            font-size: 3.5rem;
+            animation: bounce-ball 0.8s ease-in-out infinite;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.25));
         }
         @keyframes bounce-ball {
-            0%   { bottom: 20px; transform: translateX(-50%) scale(1); }
-            25%  { bottom: 95px; transform: translateX(-50%) scale(0.85); }
-            35%  { bottom: 80px; transform: translateX(-50%) scale(0.9); }
-            50%  { bottom: 100px; transform: translateX(-50%) scale(0.82); }
-            60%  { bottom: 85px; transform: translateX(-50%) scale(0.88); }
-            70%  { bottom: 20px; transform: translateX(-50%) scale(1); }
-            80%  { bottom: 20px; transform: translateX(-50%) scale(1); }
-            100% { bottom: 20px; transform: translateX(-50%) scale(1); }
+            0%, 100% { transform: translateY(0) scale(1, 1); }
+            30%  { transform: translateY(-40px) scale(0.95, 1.05); }
+            50%  { transform: translateY(0) scale(1.05, 0.9); }
+            65%  { transform: translateY(-15px) scale(0.98, 1.02); }
+            80%  { transform: translateY(0) scale(1.02, 0.98); }
         }
     </style>
 </head>
@@ -456,13 +410,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <div id="loading-overlay">
-    <div class="basketball-scene">
-        <div class="hoop">
-            <div class="hoop-rim"></div>
-            <div class="hoop-net"></div>
-        </div>
-        <div class="basketball">🏀</div>
-    </div>
+    <div class="basketball">🏀</div>
     <span>Cargando...</span>
 </div>
 
