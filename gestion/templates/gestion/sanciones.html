@@ -112,6 +112,7 @@
                                 <th>SUSPENSIÓN</th>
                                 <th>MULTA</th>
                                 <th>ESTADO</th>
+                                <th class="text-end">ACCIÓN</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -128,6 +129,14 @@
                                     {% else %}
                                     <span class="badge bg-secondary rounded-pill">Pagada</span>
                                     {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <form action="{% url 'eliminar_sancion' s.id %}" method="POST" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill" title="Eliminar registro" onclick="return confirm('¿Eliminar este registro de sanción?');">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                             {% endfor %}
