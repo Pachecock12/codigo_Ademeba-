@@ -324,9 +324,9 @@ class Temporada(models.Model):
             return 'Finalizada'
         hoy = timezone.now().date()
         if hoy < self.fecha_inicio:
-            return 'Inscripciones Cerradas (Próximo)' if not self.inscripciones_abiertas else 'Próximo Torneo'
+            return 'Inscripciones Cerradas' if not self.inscripciones_abiertas else 'Inscripciones'
         if self.inscripciones_abiertas and hoy <= self.fecha_fin:
-            return 'Inscripciones Abiertas'
+            return 'Inscripciones'
         if hoy <= self.fecha_fin:
             return 'En Curso'
         return 'Por Finalizar (Sin Campeón)'

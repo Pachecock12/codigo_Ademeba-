@@ -97,7 +97,7 @@ def dashboard_entrenador(peticion):
         total_equipos = Equipo.objects.count()
         
         hoy = timezone.now().date()
-        torneos_activos = Temporada.objects.filter(campeon__isnull=True, fecha_inicio__lte=hoy, fecha_fin__gte=hoy).select_related('campeon').order_by('-fecha_inicio')[:5]
+        torneos_activos = Temporada.objects.filter(campeon__isnull=True).select_related('campeon').order_by('-fecha_inicio')[:5]
         ultimos_jugadores = Jugador.objects.filter(activo=True).order_by('-id')[:6].select_related('equipo')
         historial_partidos = Partido.objects.filter(jugado=True).select_related('temporada', 'equipo_local', 'equipo_visitante').order_by('-fecha_hora')[:10]
         
@@ -516,7 +516,7 @@ def lista_temporadas(peticion):
         form_temporada = TemporadaForm()
         
     hoy = timezone.now().date()
-    temporadas_activas = Temporada.objects.filter(campeon__isnull=True, fecha_inicio__lte=hoy, fecha_fin__gte=hoy).annotate(inscritos=Count('inscripciones')).order_by('-fecha_inicio')
+    temporadas_activas = Temporada.objects.filter(campeon__isnull=True).annotate(inscritos=Count('inscripciones')).order_by('-fecha_inicio')
     return render(peticion, 'gestion/lista_temporadas.html', {'temporadas': temporadas_activas, 'form_temporada': form_temporada})
 
 @login_required
@@ -1216,6 +1216,7 @@ def procesar_cambio_equipo(peticion, solicitud_id, accion):
     solicitud.save()
     return redirect('lista_cambios_equipo')
 
+@login_required
 def credencial_jugador(peticion, pk):
     jugador = get_object_or_404(Jugador, pk=pk, activo=True)
     edad_deportiva = "N/A"
