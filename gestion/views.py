@@ -572,7 +572,6 @@ def toggle_inscripciones(peticion, temporada_id):
 def detalle_temporada(peticion, temporada_id):
     temporada_actual = get_object_or_404(Temporada, id=temporada_id)
     
-    # SOLUCIÓN HUECO 3: Consulta N+1 usando prefetch_related para no colapsar la BBDD
     inscripciones_base = temporada_actual.inscripciones.select_related('equipo', 'equipo__entrenador').prefetch_related('jugadores').order_by('equipo__club')
     
     inscripciones_con_edades = []
@@ -605,7 +604,6 @@ def detalle_temporada(peticion, temporada_id):
 def declarar_campeon(peticion, temporada_id):
     temporada = get_object_or_404(Temporada, id=temporada_id)
     
-    # SOLUCIÓN HUECO 2: Validar que todos los partidos estén jugados
     total_partidos = temporada.partidos.count()
     jugados = temporada.partidos.filter(jugado=True).count()
     
@@ -641,7 +639,6 @@ def gestionar_roster(peticion, temporada_id, equipo_id):
         if temporada_actual.estado_actual == 'Inscripciones':
             form_roster = RosterForm(peticion.POST, instance=inscripcion, equipo=equipo_actual, temporada=temporada_actual)
             if form_roster.is_valid():
-                # SOLUCIÓN HUECO 4: Flexibilidad traída desde la BBDD
                 minimo = temporada_actual.min_jugadores_roster
                 maximo = temporada_actual.max_jugadores_roster
                 
@@ -1342,7 +1339,6 @@ def generar_credencial_pdf(peticion, pk):
     anio_actual = date.today().year
     fecha_corte = date(anio_actual, 1, 1)
 
-    # Cálculo de edad deportiva (mantenido del diseño original)
     if not jugador.fecha_nacimiento:
         edad = "N/A"
     else:
@@ -1374,10 +1370,7 @@ def generar_credencial_pdf(peticion, pk):
     # Colores institucionales de la muestra
     color_rojo = HexColor('#B22222')
     color_verde = HexColor('#228B22')
-    
-    # ==========================================
-    #                 ANVERSO
-    # ==========================================
+
     
     # Fondo base gris muy claro
     c.setFillColorRGB(0.96, 0.96, 0.96)
